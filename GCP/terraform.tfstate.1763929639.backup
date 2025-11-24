@@ -1,0 +1,68 @@
+{
+  "version": 4,
+  "terraform_version": "1.14.0",
+  "serial": 8,
+  "lineage": "2590afaa-4a87-74f4-32f2-33894ea023dc",
+  "outputs": {},
+  "resources": [
+    {
+      "mode": "managed",
+      "type": "google_storage_bucket",
+      "name": "static-site",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 4,
+          "attributes": {
+            "autoclass": [],
+            "cors": [],
+            "custom_placement_config": [],
+            "default_event_based_hold": false,
+            "effective_labels": {},
+            "enable_object_retention": false,
+            "encryption": [],
+            "force_destroy": false,
+            "hierarchical_namespace": [
+              {
+                "enabled": false
+              }
+            ],
+            "id": "cloudwith.zarapalevani.com",
+            "ip_filter": [],
+            "labels": {},
+            "lifecycle_rule": [],
+            "location": "US-EAST1",
+            "logging": [],
+            "name": "cloudwith.zarapalevani.com",
+            "project": "cloud-resume-challenge-479115",
+            "project_number": 713335172126,
+            "public_access_prevention": "inherited",
+            "requester_pays": false,
+            "retention_policy": [],
+            "rpo": null,
+            "self_link": "https://www.googleapis.com/storage/v1/b/cloudwith.zarapalevani.com",
+            "soft_delete_policy": [
+              {
+                "effective_time": "2025-11-23T20:21:16.995Z",
+                "retention_duration_seconds": 604800
+              }
+            ],
+            "storage_class": "STANDARD",
+            "terraform_labels": {},
+            "time_created": "2025-11-23T20:21:16.995Z",
+            "timeouts": null,
+            "uniform_bucket_level_access": true,
+            "updated": "2025-11-23T20:21:16.995Z",
+            "url": "gs://cloudwith.zarapalevani.com",
+            "versioning": [],
+            "website": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsInJlYWQiOjI0MDAwMDAwMDAwMCwidXBkYXRlIjoyNDAwMDAwMDAwMDB9LCJzY2hlbWFfdmVyc2lvbiI6IjQifQ=="
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}

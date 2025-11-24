@@ -1,0 +1,4 @@
+GCP/vaults/*.json
+*.tfstate
+*.tfstate.backup
+.terraform/
