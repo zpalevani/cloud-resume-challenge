@@ -1,64 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zara Palevani | Cloud Resume Challenge</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f7f7f7;
-            text-align: center;
-        }
-        .container {
-            max-width: 700px;
-            margin: 40px auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-        }
-        img {
-            width: 200px;
-            height: auto;
-            border-radius: 100px;
-            margin-bottom: 25px;
-        }
-        a {
-            display: block;
-            margin: 15px auto;
-            text-decoration: none;
-            background: #0057d8;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            width: 60%;
-            font-size: 18px;
-            transition: 0.2s;
-        }
-        a:hover {
-            background: #003c9e;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud With Zara Palevani</title>
+    <!-- Link to a central CSS file -->
+    <link rel="stylesheet" href="/css/style.css"> 
 </head>
-
 <body>
-    <div class="container">
-        <h1>Welcome to Zara's Cloud Project</h1>
+    <header>
+        <h1>Cloud With Zara Palevani</h1>
+    </header>
 
-        <!-- Replace with your actual public GCS URL -->
-        <img src="YOUR_PUBLIC_GCS_URL_HERE" alt="Zara Palevani Photo">
+    <main class="homepage-content">
+        <!-- Welcome Message Section -->
+        <section class="welcome-banner">
+            <h2>Hello and Welcome!</h2>
+            <p>I'm Zara Palevani, a Cloud Engineer passionate about all things infrastructure, automation, and DevOps. Explore my journey and projects across the major cloud platforms below.</p>
+        </section>
 
-        <p>This site is part of my Google Cloud Resume Challenge deployment.</p>
+        <!-- Cards Section -->
+        <section class="card-grid">
+            
+            <!-- Card 1: Resume (The primary goal of the original challenge) -->
+            <a href="/resume" class="card primary-card">
+                <h3>My Technical Resume</h3>
+                <p>View my experience, skills, and certifications in a modern, single-page format.</p>
+                <!-- Optional: Add an icon (e.g., an SVG or a Font Awesome icon) -->
+            </a>
 
-        <!-- Blog link -->
-        <a href="blog.html">Visit My Blog</a>
+            <!-- Card 2: GCP Projects -->
+            <a href="/gcp" class="card">
+                <h3>Google Cloud Platform (GCP)</h3>
+                <p>Explore my projects built with Terraform, Cloud Functions, and more on GCP.</p>
+            </a>
 
-        <!-- Resume link -->
-        <a href="resume.html">View My Resume</a>
-    </div>
+            <!-- Card 3: Azure Projects -->
+            <a href="/azure" class="card">
+                <h3>Microsoft Azure</h3>
+                <p>Discover my work with Azure DevOps, Azure Functions, and Azure Virtual Networks.</p>
+            </a>
+
+            <!-- Card 4: AWS Projects -->
+            <a href="/aws" class="card">
+                <h3>Amazon Web Services (AWS)</h3>
+                <p>Check out my serverless architectures and deployments using S3, Lambda, and more.</p>
+            </a>
+            
+            <!-- Card 5: Blog/Other (Keep your blog link accessible) -->
+            <a href="/blog" class="card secondary-card">
+                <h3>My Cloud Blog</h3>
+                <p>Read my latest thoughts and deep-dives on cloud technologies.</p>
+            </a>
+            
+        </section>
+    </main>
+
+    <footer>
+        <!-- Footer content, links to social media, GitHub, etc. -->
+    </footer>
 </body>
 </html>
-

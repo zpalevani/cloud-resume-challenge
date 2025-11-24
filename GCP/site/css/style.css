@@ -1,0 +1,72 @@
+/* Conceptual CSS for the cards */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.card {
+    /* Basic Card Styling */
+    display: block;
+    padding: 25px;
+    border-radius: 8px;
+    text-decoration: none;
+    background-color: #2a2a2a; /* Dark background for a VS Code theme feel */
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px); /* Lift effect on hover */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.primary-card {
+    border-left: 5px solid #0078d4; /* Accent color for the main resume card */
+}
+
+/* --- Home Button Styles --- */
+
+/* Ensures the navigation element is clearly separated */
+.back-to-home {
+    /* You might want to position this fixed, or just as the first element in the main content */
+    margin-bottom: 25px; /* Add some space below the button */
+    padding: 10px 0;
+}
+
+.home-button {
+    /* Styling as a Button */
+    display: inline-flex; /* Use flex to align arrow and text */
+    align-items: center;
+    padding: 10px 15px;
+    border: 2px solid #0078d4; /* A professional blue border */
+    border-radius: 5px; /* Subtle rounded corners */
+    
+    /* Text and Link Styling */
+    text-decoration: none; /* Remove underline */
+    color: #0078d4; /* Text color matches border */
+    font-weight: 600; /* Semi-bold text */
+    font-size: 1.0em;
+    
+    /* Background and Interaction */
+    background-color: transparent; /* Transparent background */
+    cursor: pointer;
+    transition: all 0.3s ease; /* Smooth transition for hover effects */
+}
+
+/* Hover Effect: Invert colors to give visual feedback */
+.home-button:hover,
+.home-button:focus {
+    background-color: #0078d4; /* Blue background on hover */
+    color: #ffffff; /* White text on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow on hover */
+    transform: translateY(-1px); /* Slight lift effect */
+}
+
+
+/* Optional: If you use the &larr; entity directly in HTML, remove the ::before pseudo-element */
+/* .home-button { ... } */
+/* .home-button:hover, .home-button:focus { ... } */
+/* (Keep the rest of the styles) */
