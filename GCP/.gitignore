@@ -1,19 +1,4 @@
 # Terraform
 *.tfstate
-*.tfstate.*
-.terraform/
 *.tfstate.backup
-.terraform.lock.hcl
-
-# gcloud SDK
-google-cloud-sdk/
-google-cloud-cli-*.tar.gz
-
-# Executable for deploy
-GCP/bin/deploy
-
-# Local Python/IDE files
-__pycache__/
-
-# Other large files you had untracked
-google-cloud-cli-462.0.0-linux-x86_64.tar.gz
+.terraform/
