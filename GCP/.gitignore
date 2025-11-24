@@ -1,4 +1,9 @@
-GCP/vaults/*.json
+# Terraform
 *.tfstate
-*.tfstate.backup
+*.tfstate.*
 .terraform/
+
+# gcloud SDK
+google-cloud-sdk/
+google-cloud-cli-*.tar.gz
+
