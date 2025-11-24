@@ -25,9 +25,9 @@ resource "google_storage_bucket_iam_member" "public_read" {
 
 # Backend bucket for the HTTPS load balancer
 resource "google_compute_backend_bucket" "static_site_backend" {
-  name        = "cloudwith-backend-bucket"               # must match the name in GCP
-  bucket_name = google_storage_bucket.static-site.name   # your GCS bucket
-  enable_cdn  = true                                     # you enabled Cloud CDN
+  name        = "cloudwith-backend-bucket"             # must match the name in GCP
+  bucket_name = google_storage_bucket.static-site.name # your GCS bucket
+  enable_cdn  = true                                   # Cloud CDN enabled
 
   # Safety: don't let Terraform delete this by mistake
   lifecycle {
@@ -37,10 +37,9 @@ resource "google_compute_backend_bucket" "static_site_backend" {
 
 # Google-managed SSL certificate for cloudwith.zarapalevani.com
 resource "google_compute_managed_ssl_certificate" "static_site_cert" {
-  name = "cloudwith-cert"   # must match the cert name in GCP
+  name = "cloudwith-cert" # must match the cert name in GCP
 
   managed {
-    # You can hardcode or use a variable; hardcoding is fine for this project
     domains = ["cloudwith.zarapalevani.com"]
   }
 
@@ -48,7 +47,6 @@ resource "google_compute_managed_ssl_certificate" "static_site_cert" {
     prevent_destroy = true
   }
 }
-
 
 # Upload index.html
 resource "google_storage_bucket_object" "index" {
@@ -58,6 +56,7 @@ resource "google_storage_bucket_object" "index" {
   content_type = "text/html"
 }
 
+# Upload 404.html
 resource "google_storage_bucket_object" "not_found" {
   name         = "404.html"
   bucket       = google_storage_bucket.static-site.name
@@ -65,3 +64,18 @@ resource "google_storage_bucket_object" "not_found" {
   content_type = "text/html"
 }
 
+# Upload blog.html
+resource "google_storage_bucket_object" "blog" {
+  name         = "blog.html"
+  bucket       = google_storage_bucket.static-site.name
+  source       = "${path.module}/site/blog.html"
+  content_type = "text/html"
+}
+
+# Upload resume.html
+resource "google_storage_bucket_object" "resume" {
+  name         = "resume.html"
+  bucket       = google_storage_bucket.static-site.name
+  source       = "${path.module}/site/resume.html"
+  content_type = "text/html"
+}
