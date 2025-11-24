@@ -49,5 +49,5 @@ env | grep GOOGLE
 pipx install --include-deps ansible
 ```
 
-## set up valut with gcp cred
+## set up vault with gcp cred
 we'll need store the contents of the gcp key in our vault.
