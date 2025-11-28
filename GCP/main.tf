@@ -3,10 +3,8 @@ provider "google" {
   region  = "us-east1"
 }
 
-# --- Local Configuration Map for Files (NEW) ---
-# Defines all files to be deployed to the GCS bucket.
-# Key is the path in the GCS bucket (which creates the clean URL).
-# Value is the source path on your local file system.
+# --- Local Configuration Map for Files (UPDATED) ---
+# Removed AWS and Azure entries to match your screenshot
 locals {
   static_site_files = {
     "index.html"        = "${path.module}/site/index.html"
@@ -15,13 +13,10 @@ locals {
     # Clean URL Pages (folder/index.html convention)
     "blog/index.html"   = "${path.module}/site/blog/index.html"
     "resume/index.html" = "${path.module}/site/resume/index.html"
-    "aws/index.html"    = "${path.module}/site/aws/index.html"
-    "azure/index.html"  = "${path.module}/site/azure/index.html"
     "gcp/index.html"    = "${path.module}/site/gcp/index.html"
     
     # Static Assets
     "css/style.css"     = "${path.module}/site/css/style.css"
-    # Add other assets here (e.g., "images/logo.png" = "${path.module}/site/images/logo.png")
   }
 }
 
@@ -72,9 +67,8 @@ resource "google_compute_managed_ssl_certificate" "static_site_cert" {
   }
 }
 
-# --- Website File Deployment (UPDATED) ---
-# This single resource block iterates over the 'static_site_files' map
-# to upload all website assets correctly.
+# --- Website File Deployment ---
+# This iterates over the 'static_site_files' map to upload assets.
 resource "google_storage_bucket_object" "site_objects" {
   for_each = local.static_site_files
   
@@ -85,6 +79,6 @@ resource "google_storage_bucket_object" "site_objects" {
   # The source on your filesystem (value)
   source       = each.value 
   
-  # Use a ternary operator to set the correct content type (important for CSS/JS)
+  # Use a ternary operator to set the correct content type
   content_type = endswith(each.key, ".css") ? "text/css" : "text/html"
 }
