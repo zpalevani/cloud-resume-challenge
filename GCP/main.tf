@@ -3,6 +3,29 @@ provider "google" {
   region  = "us-east1"
 }
 
+# --- Local Configuration Map for Files (NEW) ---
+# Defines all files to be deployed to the GCS bucket.
+# Key is the path in the GCS bucket (which creates the clean URL).
+# Value is the source path on your local file system.
+locals {
+  static_site_files = {
+    "index.html"        = "${path.module}/site/index.html"
+    "404.html"          = "${path.module}/site/404.html"
+
+    # Clean URL Pages (folder/index.html convention)
+    "blog/index.html"   = "${path.module}/site/blog/index.html"
+    "resume/index.html" = "${path.module}/site/resume/index.html"
+    "aws/index.html"    = "${path.module}/site/aws/index.html"
+    "azure/index.html"  = "${path.module}/site/azure/index.html"
+    "gcp/index.html"    = "${path.module}/site/gcp/index.html"
+    
+    # Static Assets
+    "css/style.css"     = "${path.module}/site/css/style.css"
+    # Add other assets here (e.g., "images/logo.png" = "${path.module}/site/images/logo.png")
+  }
+}
+
+# --- Core GCS Bucket Configuration ---
 resource "google_storage_bucket" "static-site" {
   name          = var.bucket_name
   location      = "us-east1"
@@ -23,6 +46,7 @@ resource "google_storage_bucket_iam_member" "public_read" {
   member = "allUsers"
 }
 
+# --- Cloud Load Balancer/CDN Configuration ---
 # Backend bucket for the HTTPS load balancer
 resource "google_compute_backend_bucket" "static_site_backend" {
   name        = "cloudwith-backend-bucket"             # must match the name in GCP
@@ -48,34 +72,19 @@ resource "google_compute_managed_ssl_certificate" "static_site_cert" {
   }
 }
 
-# Upload index.html
-resource "google_storage_bucket_object" "index" {
-  name         = "index.html"
+# --- Website File Deployment (UPDATED) ---
+# This single resource block iterates over the 'static_site_files' map
+# to upload all website assets correctly.
+resource "google_storage_bucket_object" "site_objects" {
+  for_each = local.static_site_files
+  
+  # The GCS object name (key) dictates the clean URL structure
+  name         = each.key 
   bucket       = google_storage_bucket.static-site.name
-  source       = "${path.module}/site/index.html"
-  content_type = "text/html"
-}
-
-# Upload 404.html
-resource "google_storage_bucket_object" "not_found" {
-  name         = "404.html"
-  bucket       = google_storage_bucket.static-site.name
-  source       = "${path.module}/site/404.html"
-  content_type = "text/html"
-}
-
-# Upload blog.html
-resource "google_storage_bucket_object" "blog" {
-  name         = "blog.html"
-  bucket       = google_storage_bucket.static-site.name
-  source       = "${path.module}/site/blog.html"
-  content_type = "text/html"
-}
-
-# Upload resume.html
-resource "google_storage_bucket_object" "resume" {
-  name         = "resume.html"
-  bucket       = google_storage_bucket.static-site.name
-  source       = "${path.module}/site/resume.html"
-  content_type = "text/html"
+  
+  # The source on your filesystem (value)
+  source       = each.value 
+  
+  # Use a ternary operator to set the correct content type (important for CSS/JS)
+  content_type = endswith(each.key, ".css") ? "text/css" : "text/html"
 }
