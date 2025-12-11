@@ -1,4 +1,3 @@
-cat > AWS/template.yaml << 'EOF'
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Cloud Resume Challenge - S3 bucket for frontend hosting
 
@@ -13,4 +12,3 @@ Resources:
     Properties:
       BucketName: !Ref BucketName
     DeletionPolicy: Retain
-EOF

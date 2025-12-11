@@ -1,4 +1,3 @@
-cat > AWS/playbooks/deploy.yml << 'EOF'
 ---
 - name: Deploy CloudFormation stack for Cloud Resume Challenge
   hosts: localhost
@@ -22,12 +21,10 @@ cat > AWS/playbooks/deploy.yml << 'EOF'
         template: "{{ playbook_dir }}/../template.yaml"
         template_parameters:
           BucketName: "{{ bucket_name }}"
-        disable_rollback: false
         on_create_failure: ROLLBACK
-        wait: true
       register: cfn_result
+
 
     - name: Show CloudFormation result
       debug:
         var: cfn_result
-EOF
