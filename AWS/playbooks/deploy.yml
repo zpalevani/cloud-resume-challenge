@@ -1,3 +1,4 @@
+cat > AWS/playbooks/deploy.yml << 'EOF'
 ---
 - name: Deploy CloudFormation stack for Cloud Resume Challenge
   hosts: localhost
@@ -29,3 +30,4 @@
     - name: Show CloudFormation result
       debug:
         var: cfn_result
+EOF
