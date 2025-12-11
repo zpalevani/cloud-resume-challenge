@@ -1,0 +1,31 @@
+---
+- name: Deploy CloudFormation stack for Cloud Resume Challenge
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars_files:
+    - ../vaults/prod.yml
+
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ aws_access_key_id }}"
+    AWS_SECRET_ACCESS_KEY: "{{ aws_secret_access_key }}"
+    AWS_DEFAULT_REGION: "{{ aws_region }}"
+
+  tasks:
+    - name: Ensure CloudFormation stack is present
+      amazon.aws.cloudformation:
+        stack_name: "{{ cfn_stack }}"
+        state: present
+        region: "{{ aws_region }}"
+        template: "{{ playbook_dir }}/../template.yaml"
+        template_parameters:
+          BucketName: "{{ bucket_name }}"
+        disable_rollback: false
+        on_create_failure: ROLLBACK
+        wait: true
+      register: cfn_result
+
+    - name: Show CloudFormation result
+      debug:
+        var: cfn_result
