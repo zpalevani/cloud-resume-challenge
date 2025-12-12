@@ -13,14 +13,12 @@ Setting up my infrastructure-as-code workflow
 I opened my repository in GitHub Codespaces so I could work inside a Linux environment (required for Ansible). My repository structure now includes an AWS folder that will contain:
 ```
 AWS/
-  template.yaml         # CloudFormation template
-  playbooks/
-      deploy.yml        # Ansible playbook to deploy CloudFormation
-  vaults/
-      prod.yml          # Encrypted secrets for Ansible Vault
-  bin/
-      deploy            # One-command deploy script
-
+├── template.yaml
+├── playbooks/
+│   └── deploy.yml
+├── vaults/
+│   └── prod.yml   (encrypted with Ansible Vault)
+└── README.md      (optional, recommended)
 ```
 Installing Ansible in Codespaces
 Inside Codespaces, I installed Ansible and the AWS collection required for CloudFormation deployments:
