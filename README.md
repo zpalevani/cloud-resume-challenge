@@ -55,7 +55,6 @@ Resources:
 Creating the Ansible playbook
 At AWS/playbooks/deploy.yml, I wrote the playbook that applies this CloudFormation stack:
 ```
----
 - name: Deploy CloudFormation stack for Cloud Resume Challenge
   hosts: localhost
   connection: local
@@ -81,22 +80,19 @@ At AWS/playbooks/deploy.yml, I wrote the playbook that applies this CloudFormati
         disable_rollback: false
         on_create_failure: ROLLBACK
         wait: true
-
 ```
 Creating AWS credentials for automation
 In AWS IAM, I created a machine user:
 User: cloud-resume-challenge-machine
 
-
 Permission: AdministratorAccess (temporary for the project)
 
 Generated:
 
-Access Key ID
+- Access Key ID
+- Secret Access Key
+- Storing secrets in an Ansible Vault
 
-Secret Access Key
-
-Storing secrets in an Ansible Vault
 I created the unencrypted file first:
 ```
 cat > AWS/vaults/prod.yml
@@ -111,9 +107,7 @@ aws_secret_access_key: <MY_SECRET_ACCESS_KEY>
 
 bucket_name: cloud-resume-zarapalevani-2025
 ```
-
 Then I encrypted it:
-
 ```
 ansible-vault encrypt AWS/vaults/prod.yml
 ```
@@ -132,11 +126,9 @@ cd "${PROJECT_ROOT}"
 ansible-playbook --ask-vault-pass AWS/playbooks/deploy.yml "$@"
 ```
 Made it executable:
-
 ```
 chmod +x AWS/bin/deploy
 ```
-
 Or via my one-command script:
 ```
 ./AWS/bin/deploy
