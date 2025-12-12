@@ -190,3 +190,49 @@ At this point:
 This establishes a solid foundation for the next steps: mapping my custom domain to the S3 website endpoint, adding HTTPS via CloudFront, and then replicating the same frontend-and-flavor pattern for Azure and GCP using their native services.
 Files uploaded to S3 Bucket: ![alt text](image.png)
 This is how the first version of the website look like: ![alt text](image-1.png)
+
+With the static website successfully hosted on S3, the next step was to make it accessible through my custom domain with HTTPS. This required introducing CloudFront as a CDN layer in front of the S3 website and configuring DNS and TLS correctly.
+
+I created a CloudFront distribution with my S3 static website endpoint set as the origin. CloudFront provides global edge caching, HTTPS termination, and acts as the public-facing entry point for my site. At this stage, the site was reachable via the CloudFront-generated domain name (*.cloudfront.net), confirming that the distribution was correctly serving the S3 content.
+
+To connect my custom domain (cloudwithzarapalevani.online) to CloudFront, I added the domain as an Alternate Domain Name (CNAME) in the CloudFront distribution settings. I included both the root domain and the www subdomain to ensure consistent access patterns:
+- cloudwithzarapalevani.online
+- www.cloudwithzarapalevani.online
+
+Because CloudFront requires HTTPS for custom domains, I requested a public TLS certificate using AWS Certificate Manager (ACM). I requested the certificate in the us-east-1 region (a strict requirement for CloudFront) and included the following domain names:
+- cloudwithzarapalevani.online
+- www.cloudwithzarapalevani.online
+- *.cloudwithzarapalevani.online
+
+I selected DNS validation, which allows AWS to verify domain ownership through Route 53 records rather than email approval. From the ACM console, I used the “Create records in Route 53” option, which automatically added the required CNAME validation records to my hosted zone. This step confirmed that Route 53 was correctly configured as the authoritative DNS provider for my domain.
+
+Once the validation records were created, the certificate entered a “Pending validation” state. While waiting for validation and propagation, I returned to the CloudFront distribution and attached the ACM certificate to it. I also configured the security policy to TLS 1.2 (recommended) and set index.html as the default root object so requests to the root path would resolve correctly.
+
+Next, I created Route 53 alias A records to route traffic from my domain to CloudFront. I created:
+- An alias A record for cloudwithzarapalevani.online pointing to the CloudFront distribution
+- An alias A record for www.cloudwithzarapalevani.online pointing to the same distribution
+
+Using alias records instead of traditional CNAMEs allows Route 53 to support apex (root) domains and integrates natively with AWS services.
+
+After creating the DNS records, Route 53 began propagating the changes globally. During this phase, the domain temporarily returned DNS errors (NXDOMAIN), which is expected behavior while DNS and certificate validation propagate across the internet.
+
+At this point, all major components were in place:
+- Route 53 controlling DNS
+- S3 hosting the static frontend
+- CloudFront serving the site globally
+- ACM providing HTTPS certificates
+- A custom domain mapped to the distribution
+
+The remaining work is primarily waiting for propagation and certificate validation to complete, after which the site will be accessible securely at:
+https://cloudwithzarapalevani.online
+and
+https://www.cloudwithzarapalevani.online
+
+This completes the AWS end-to-end path from infrastructure-as-code to a production-grade, HTTPS-enabled static website. The same architectural pattern can now be reused for Azure and GCP, with only provider-specific infrastructure and DNS differences, while keeping the frontend codebase shared and consistent across clouds.
+
+Screenshots:
+- CloudFront distribution overview 
+![alt text](image-2.png)
+- ACM certificate pending → issued
+![alt text](image-3.png)
+- Final site loading over HTTPS
