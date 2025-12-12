@@ -188,3 +188,5 @@ At this point:
 - Deployment is repeatable with a single command
 
 This establishes a solid foundation for the next steps: mapping my custom domain to the S3 website endpoint, adding HTTPS via CloudFront, and then replicating the same frontend-and-flavor pattern for Azure and GCP using their native services.
+Files uploaded to S3 Bucket: ![alt text](image.png)
+This is how the first version of the website look like: ![alt text](image-1.png)
