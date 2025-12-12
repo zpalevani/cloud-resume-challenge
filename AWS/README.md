@@ -248,6 +248,7 @@ Screenshots:
 ![alt text](image-3.png)
 - Final site loading over HTTPS
 ![alt text](image-4.png)
+
 During DNS and CloudFront propagation, I temporarily encountered 504 Gateway Timeout errors when accessing both the CloudFront domain and my custom domain. This indicated that CloudFront was unable to reach the S3 origin at that moment — a common transient state while distributions deploy globally and origin configurations finalize.
 
 I verified that the S3 static website endpoint itself was reachable directly and serving the expected content, confirming that the issue was not with the bucket or uploaded assets, but with CloudFront still deploying and stabilizing the origin connection.
@@ -266,5 +267,4 @@ This confirmed that the full request path was functioning as intended:
 Route 53 → CloudFront → S3 static website
 Reaching this state marked the completion of the AWS hosting portion of my Cloud Resume Challenge. I now have a globally distributed, HTTPS-secured static website backed by infrastructure as code, automation-first deployment, and a clean separation between shared frontend logic and cloud-specific implementations.
 ![alt text](image-5.png)
-The following diagram summarizes my progress in two days:
-![alt text](image.png)
+
