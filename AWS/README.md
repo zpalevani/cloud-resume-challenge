@@ -1,4 +1,4 @@
-# Dec 11, 2025
+# Dec 11, 2025 (Frontend)
 
 Purchased URL from namecheapa for my AWS project: cloudwithzarapalevani.online. I am aware that I could registere a domain via Route 53 but chose to do so via NameCheap. 
 
@@ -156,7 +156,7 @@ and CloudFormation now shows a stack named cloud-resume-challenge in CREATE_COMP
 <img width="845" height="550" alt="image" src="https://github.com/user-attachments/assets/3c869196-5973-4921-97eb-b9d70c07e9a2" />
 
 
-# Dec 12
+# Dec 12 (Frontend)
 
 I proceeded to implement static website hosting on AWS S3 using a repeatable, automation-first approach that aligns with how I plan to deploy the same architecture across Azure and GCP.
 
