@@ -199,8 +199,8 @@ At this point:
 - Deployment is repeatable with a single command
 
 This establishes a solid foundation for the next steps: mapping my custom domain to the S3 website endpoint, adding HTTPS via CloudFront, and then replicating the same frontend-and-flavor pattern for Azure and GCP using their native services.
-Files uploaded to S3 Bucket: ![alt text](image.png)
-This is how the first version of the website look like: ![alt text](image-1.png)
+Files uploaded to S3 Bucket: ![alt text](image-5.png)
+This is how the first version of the website look like: ![alt text](image-6.png)
 
 With the static website successfully hosted on S3, the next step was to make it accessible through my custom domain with HTTPS. This required introducing CloudFront as a CDN layer in front of the S3 website and configuring DNS and TLS correctly.
 
@@ -266,5 +266,5 @@ This confirmed that the full request path was functioning as intended:
 
 Route 53 → CloudFront → S3 static website
 Reaching this state marked the completion of the AWS hosting portion of my Cloud Resume Challenge. I now have a globally distributed, HTTPS-secured static website backed by infrastructure as code, automation-first deployment, and a clean separation between shared frontend logic and cloud-specific implementations.
-![alt text](image-1.png)
+
 
