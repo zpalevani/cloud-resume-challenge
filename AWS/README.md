@@ -259,8 +259,10 @@ After allowing additional time for CloudFront deployment and DNS propagation to 
 
 At that point, my resume site was successfully live and accessible over HTTPS at:
 
-https://cloudwithzarapalevani.online
-https://www.cloudwithzarapalevani.online
+- https://cloudwithzarapalevani.online
+- https://www.cloudwithzarapalevani.online
+
+![alt text](image-7.png)
 
 This confirmed that the full request path was functioning as intended:
 
