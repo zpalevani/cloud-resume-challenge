@@ -1,0 +1,25 @@
+# ---- OS / Editor ----
+.DS_Store
+.vscode/
+.idea/
+
+# ---- Python ----
+__pycache__/
+*.pyc
+.venv/
+env/
+
+# ---- Node / Frontend ----
+node_modules/
+
+# ---- Build artifacts (generated) ----
+frontend/dist/
+
+# ---- Ansible / Secrets ----
+*.retry
+.vault_pass
+AWS/vaults/*.yml
+AWS/vaults/*.yaml
+
+# ---- Logs ----
+*.log
