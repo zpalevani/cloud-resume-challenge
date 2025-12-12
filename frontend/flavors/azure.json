@@ -1,0 +1,14 @@
+
+{
+  "SITE_TITLE": "Zara Palevani | Azure Cloud Resume",
+  "PROVIDER_BADGE": "Azure Deployment",
+  "PROVIDER_NAME": "Microsoft Azure",
+  "HERO_TITLE": "Cloud Resume on Azure",
+  "HERO_SUBTITLE": "Static website hosting on Azure Storage.",
+  "DOMAIN": "azure.your-domain.example",
+  "IAC": "Bicep / Terraform",
+  "DEPLOYMENT": "Automation (future)",
+  "YEAR": "2025",
+  "YOUR_NAME": "Zara Palevani"
+}
+

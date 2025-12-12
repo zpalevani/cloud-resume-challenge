@@ -1,0 +1,46 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>__SITE_TITLE__</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <div class="badge">__PROVIDER_BADGE__</div>
+      <h1>__HERO_TITLE__</h1>
+      <p class="subtitle">__HERO_SUBTITLE__</p>
+    </header>
+
+    <section class="card">
+      <h2>About this build</h2>
+      <ul>
+        <li><strong>Domain:</strong> __DOMAIN__</li>
+        <li><strong>Cloud:</strong> __PROVIDER_NAME__</li>
+        <li><strong>Infrastructure:</strong> __IAC__</li>
+        <li><strong>Deployment:</strong> __DEPLOYMENT__</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>What I’m proving</h2>
+      <ol>
+        <li>Infrastructure is reproducible (IaC).</li>
+        <li>Deployments are automated (Ansible).</li>
+        <li>DNS + hosting routes real traffic to cloud resources.</li>
+      </ol>
+      <p class="note">This page is generated from a shared template + a cloud-specific flavor config.</p>
+    </section>
+
+    <footer class="footer">
+      <p>© __YEAR__ __YOUR_NAME__</p>
+    </footer>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
+

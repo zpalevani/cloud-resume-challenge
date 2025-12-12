@@ -1,5 +1,5 @@
 ---
-- name: Deploy CloudFormation stack for Cloud Resume Challenge
+- name: Deploy CloudFormation stack and upload frontend (AWS flavor)
   hosts: localhost
   connection: local
   gather_facts: false
@@ -13,7 +13,7 @@
     AWS_DEFAULT_REGION: "{{ aws_region }}"
 
   tasks:
-    - name: Ensure CloudFormation stack is present
+    - name: Deploy / update CloudFormation stack
       amazon.aws.cloudformation:
         stack_name: "{{ cfn_stack }}"
         state: present
@@ -21,10 +21,15 @@
         template: "{{ playbook_dir }}/../template.yaml"
         template_parameters:
           BucketName: "{{ bucket_name }}"
-        on_create_failure: ROLLBACK
       register: cfn_result
 
+    - name: Build frontend flavor (aws)
+      ansible.builtin.command: ./scripts/build-frontend.sh aws
+      args:
+        chdir: "{{ playbook_dir }}/../.."
 
-    - name: Show CloudFormation result
-      debug:
-        var: cfn_result
+    - name: Upload generated frontend to S3
+      ansible.builtin.command: >
+        aws s3 sync "frontend/dist/aws" "s3://{{ bucket_name }}" --delete
+      args:
+        chdir: "{{ playbook_dir }}/../.."

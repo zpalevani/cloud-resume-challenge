@@ -1,0 +1,14 @@
+
+{
+  "SITE_TITLE": "Zara Palevani | GCP Cloud Resume",
+  "PROVIDER_BADGE": "GCP Deployment",
+  "PROVIDER_NAME": "Google Cloud Platform",
+  "HERO_TITLE": "Cloud Resume on GCP",
+  "HERO_SUBTITLE": "Hosted on GCS static website hosting.",
+  "DOMAIN": "gcp.your-domain.example",
+  "IAC": "Terraform",
+  "DEPLOYMENT": "Automation (future)",
+  "YEAR": "2025",
+  "YOUR_NAME": "Zara Palevani"
+}
+

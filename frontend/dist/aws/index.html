@@ -1,0 +1,46 @@
+cat > frontend/shared/index.html << 'EOF'
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Zara Palevani | AWS Cloud Resume</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <div class="badge">AWS Deployment</div>
+      <h1>Cloud Resume on AWS</h1>
+      <p class="subtitle">Hosted on S3 static website hosting. Provisioned via CloudFormation. Deployed via Ansible.</p>
+    </header>
+
+    <section class="card">
+      <h2>About this build</h2>
+      <ul>
+        <li><strong>Domain:</strong> cloudwithzarapalevani.online (AWS project domain)</li>
+        <li><strong>Cloud:</strong> Amazon Web Services</li>
+        <li><strong>Infrastructure:</strong> CloudFormation (AWS/template.yaml)</li>
+        <li><strong>Deployment:</strong> Ansible (AWS/playbooks/deploy.yml + Ansible Vault)</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>What I’m proving</h2>
+      <ol>
+        <li>Infrastructure is reproducible (IaC).</li>
+        <li>Deployments are automated (Ansible).</li>
+        <li>DNS + hosting routes real traffic to cloud resources.</li>
+      </ol>
+      <p class="note">This page is generated from a shared template + a cloud-specific flavor config.</p>
+    </section>
+
+    <footer class="footer">
+      <p>© 2025 Zara Palevani</p>
+    </footer>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
+EOF

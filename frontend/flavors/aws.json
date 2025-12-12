@@ -1,0 +1,14 @@
+
+{
+  "SITE_TITLE": "Zara Palevani | AWS Cloud Resume",
+  "PROVIDER_BADGE": "AWS Deployment",
+  "PROVIDER_NAME": "Amazon Web Services",
+  "HERO_TITLE": "Cloud Resume on AWS",
+  "HERO_SUBTITLE": "Hosted on S3 static website hosting. Provisioned via CloudFormation. Deployed via Ansible.",
+  "DOMAIN": "cloudwithzarapalevani.online (AWS project domain)",
+  "IAC": "CloudFormation (AWS/template.yaml)",
+  "DEPLOYMENT": "Ansible (AWS/playbooks/deploy.yml + Ansible Vault)",
+  "YEAR": "2025",
+  "YOUR_NAME": "Zara Palevani"
+}
+
