@@ -266,5 +266,5 @@ This confirmed that the full request path was functioning as intended:
 
 Route 53 → CloudFront → S3 static website
 Reaching this state marked the completion of the AWS hosting portion of my Cloud Resume Challenge. I now have a globally distributed, HTTPS-secured static website backed by infrastructure as code, automation-first deployment, and a clean separation between shared frontend logic and cloud-specific implementations.
-![alt text](image-5.png)
+![alt text](image-1.png)
 
