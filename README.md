@@ -143,8 +143,17 @@ Or via my one-command script:
 ```
 ./AWS/bin/deploy
 ```
-
 This executed CloudFormation through Ansible, creating my S3 bucket inside AWS — the first real piece of my automated Cloud Resume Challenge infrastructure.
+
+I iterated through multiple Ansible and YAML errors (bad playbook syntax, invalid vault YAML, unsupported CloudFormation module parameters, and missing boto3/botocore on the Codespaces Python interpreter). After fixing these one by one, I ran:
+```
+ansible-playbook --ask-vault-pass AWS/playbooks/deploy.yml
+```
+The playbook completed successfully with:
+```
+Stack CREATE complete
+```
+and CloudFormation now shows a stack named cloud-resume-challenge in CREATE_COMPLETE state, with an S3 bucket resource cloud-resume-zarapalevani-2025. My one-command infra deploy is officially working.
 
 # Dec 12
 
