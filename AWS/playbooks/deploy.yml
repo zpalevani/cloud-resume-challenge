@@ -7,27 +7,319 @@
     - ../vaults/prod.yml
 
   environment:
+    AWS_DEFAULT_REGION: "{{ aws_region }}"
     AWS_ACCESS_KEY_ID: "{{ aws_access_key_id }}"
     AWS_SECRET_ACCESS_KEY: "{{ aws_secret_access_key }}"
-    AWS_DEFAULT_REGION: "{{ aws_region }}"
+
+  vars:
+    repo_root: "{{ playbook_dir }}/../.."
+    deploy_source_dir: "{{ repo_root }}/frontend/shared"
+
+    # Domain == bucket name in your setup
+    domain_name: "{{ bucket_name }}"
+
+    # CloudFront HostedZoneId for AliasTarget is constant
+    cloudfront_alias_zone_id: "Z2FDTNDATAQYW2"
+
+    # Set true ONE TIME if the site is down due to missing A/AAAA records
+    restore_dns_now: false
+
+    # Keep false unless you are absolutely sure you want to delete A/AAAA
+    force_dns_cleanup: false
 
   tasks:
-    - name: Deploy / update CloudFormation stack
+    - name: Fail fast if required vars are missing
+      ansible.builtin.assert:
+        that:
+          - bucket_name is defined
+          - bucket_name | length > 0
+          - aws_region is defined
+          - aws_region | length > 0
+          - cfn_stack is defined
+          - cfn_stack | length > 0
+          - frontend_flavor is defined
+          - frontend_flavor | length > 0
+          - acm_certificate_arn is defined
+          - acm_certificate_arn | length > 0
+          - aws_access_key_id is defined
+          - aws_access_key_id | length > 0
+          - aws_secret_access_key is defined
+          - aws_secret_access_key | length > 0
+        fail_msg: >
+          Missing required vars in AWS/vaults/prod.yml.
+          Need: bucket_name, aws_region, cfn_stack, frontend_flavor, acm_certificate_arn,
+          aws_access_key_id, aws_secret_access_key
+      changed_when: false
+
+    - name: Sanity check AWS credentials (who am I)
+      ansible.builtin.command: aws sts get-caller-identity
+      register: whoami
+      changed_when: false
+
+    - name: Show AWS identity
+      ansible.builtin.debug:
+        var: whoami.stdout
+
+    - name: Lookup Route53 Hosted Zone ID for domain
+      ansible.builtin.command: >
+        aws route53 list-hosted-zones-by-name
+        --dns-name "{{ domain_name }}"
+        --max-items 1
+        --query "HostedZones[0].Id"
+        --output text
+      register: hz
+      changed_when: false
+
+    - name: Clean Hosted Zone ID (remove /hostedzone/ prefix)
+      ansible.builtin.set_fact:
+        hosted_zone_id: "{{ hz.stdout | regex_replace('^/hostedzone/', '') }}"
+
+    - name: Debug hosted zone id
+      ansible.builtin.debug:
+        var: hosted_zone_id
+
+    - name: Show Route53 apex and www records (current)
+      ansible.builtin.command: >
+        aws route53 list-resource-record-sets
+        --hosted-zone-id "{{ hosted_zone_id }}"
+        --query "ResourceRecordSets[?Name=='{{ domain_name }}.' || Name=='www.{{ domain_name }}.'].[Name,Type,AliasTarget.DNSName]"
+        --output table
+      register: zone_records_current
+      changed_when: false
+
+    - name: Route53 apex and www records (current)
+      ansible.builtin.debug:
+        var: zone_records_current.stdout
+
+    - name: Read CloudFront domain from stack outputs (preferred)
+      ansible.builtin.command: >
+        aws cloudformation describe-stacks
+        --stack-name "{{ cfn_stack }}"
+        --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDomainName'].OutputValue | [0]"
+        --output text
+      register: cfn_cf_domain
+      changed_when: false
+
+    - name: Read CloudFront distribution id from stack outputs (preferred)
+      ansible.builtin.command: >
+        aws cloudformation describe-stacks
+        --stack-name "{{ cfn_stack }}"
+        --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue | [0]"
+        --output text
+      register: cfn_cf_dist
+      changed_when: false
+
+    - name: Choose CloudFront domain (normalize to no trailing dot)
+      ansible.builtin.set_fact:
+        active_cf_domain: "{{ cfn_cf_domain.stdout | default('') | regex_replace('\\.$', '') }}"
+        active_cf_dist_id: "{{ cfn_cf_dist.stdout | default('') | regex_replace('\\.$', '') }}"
+
+    - name: Stop if CloudFront domain output is missing
+      ansible.builtin.assert:
+        that:
+          - active_cf_domain is defined
+          - active_cf_domain | length > 0
+          - active_cf_domain != "None"
+        fail_msg: >
+          CloudFrontDomainName stack output is missing/None.
+          Fix the stack outputs first or provide CloudFront domain another way.
+      changed_when: false
+
+    - name: Emergency restore Route53 apex and www A and AAAA alias records (UPSERT)
+      ansible.builtin.shell: |
+        set -euo pipefail
+
+        HZID="{{ hosted_zone_id }}"
+        CF_DNS="{{ active_cf_domain }}"
+        APEX="{{ domain_name }}."
+        WWW="www.{{ domain_name }}."
+
+        cat > /tmp/r53-restore.json <<JSON
+        {
+          "Comment": "Emergency restore: point apex+www back to CloudFront",
+          "Changes": [
+            {
+              "Action": "UPSERT",
+              "ResourceRecordSet": {
+                "Name": "${APEX}",
+                "Type": "A",
+                "AliasTarget": {
+                  "HostedZoneId": "{{ cloudfront_alias_zone_id }}",
+                  "DNSName": "${CF_DNS}.",
+                  "EvaluateTargetHealth": false
+                }
+              }
+            },
+            {
+              "Action": "UPSERT",
+              "ResourceRecordSet": {
+                "Name": "${APEX}",
+                "Type": "AAAA",
+                "AliasTarget": {
+                  "HostedZoneId": "{{ cloudfront_alias_zone_id }}",
+                  "DNSName": "${CF_DNS}.",
+                  "EvaluateTargetHealth": false
+                }
+              }
+            },
+            {
+              "Action": "UPSERT",
+              "ResourceRecordSet": {
+                "Name": "${WWW}",
+                "Type": "A",
+                "AliasTarget": {
+                  "HostedZoneId": "{{ cloudfront_alias_zone_id }}",
+                  "DNSName": "${CF_DNS}.",
+                  "EvaluateTargetHealth": false
+                }
+              }
+            },
+            {
+              "Action": "UPSERT",
+              "ResourceRecordSet": {
+                "Name": "${WWW}",
+                "Type": "AAAA",
+                "AliasTarget": {
+                  "HostedZoneId": "{{ cloudfront_alias_zone_id }}",
+                  "DNSName": "${CF_DNS}.",
+                  "EvaluateTargetHealth": false
+                }
+              }
+            }
+          ]
+        }
+        JSON
+
+        aws route53 change-resource-record-sets \
+          --hosted-zone-id "$HZID" \
+          --change-batch file:///tmp/r53-restore.json
+      args:
+        executable: /bin/bash
+      when: restore_dns_now | bool
+
+    - name: Show Route53 apex and www records (after restore)
+      ansible.builtin.command: >
+        aws route53 list-resource-record-sets
+        --hosted-zone-id "{{ hosted_zone_id }}"
+        --query "ResourceRecordSets[?Name=='{{ domain_name }}.' || Name=='www.{{ domain_name }}.'].[Name,Type,AliasTarget.DNSName]"
+        --output table
+      register: zone_records_after_restore
+      changed_when: false
+
+    - name: Route53 apex and www records (after restore)
+      ansible.builtin.debug:
+        var: zone_records_after_restore.stdout
+
+    - name: Optional cleanup Route53 apex and www A and AAAA records (RARE recovery only)
+      ansible.builtin.shell: |
+        set -euo pipefail
+
+        HZID="{{ hosted_zone_id }}"
+        APEX="{{ domain_name }}."
+        WWW="www.{{ domain_name }}."
+
+        aws route53 list-resource-record-sets \
+          --hosted-zone-id "$HZID" \
+          --output json \
+          --query "ResourceRecordSets[?((Name=='${APEX}' || Name=='${WWW}') && (Type=='A' || Type=='AAAA'))]" \
+          > /tmp/dupe-records.json
+
+        COUNT=$(python - <<'PY'
+        import json
+        recs = json.load(open("/tmp/dupe-records.json"))
+        print(len(recs))
+        PY
+        )
+
+        echo "Found $COUNT existing apex/www A/AAAA records."
+
+        if [ "$COUNT" -eq 0 ]; then
+          echo "Nothing to delete; continuing."
+          exit 0
+        fi
+
+        python - <<'PY'
+        import json
+        recs = json.load(open("/tmp/dupe-records.json"))
+        batch = {
+          "Comment": "Recovery: delete existing apex/www A+AAAA (use only if absolutely needed)",
+          "Changes": [{"Action": "DELETE", "ResourceRecordSet": r} for r in recs]
+        }
+        open("/tmp/delete-dupes.json", "w").write(json.dumps(batch, indent=2))
+        print("Prepared delete batch for", len(recs), "records")
+        PY
+
+        aws route53 change-resource-record-sets \
+          --hosted-zone-id "$HZID" \
+          --change-batch file:///tmp/delete-dupes.json
+      args:
+        executable: /bin/bash
+      when: force_dns_cleanup | bool
+
+    - name: Deploy or update CloudFormation stack (DNS and ACM managed outside CFN)
       amazon.aws.cloudformation:
         stack_name: "{{ cfn_stack }}"
         state: present
         region: "{{ aws_region }}"
-        template: "{{ playbook_dir }}/../template.yaml"
+        template: "{{ playbook_dir }}/../template.yml"
         template_parameters:
           BucketName: "{{ bucket_name }}"
+          DomainName: "{{ domain_name }}"
+          AcmCertificateArn: "{{ acm_certificate_arn }}"
+      register: cfn
+
+    - name: Wait for CloudFormation update to complete (when a change occurred)
+      ansible.builtin.command: >
+        aws cloudformation wait stack-update-complete
+        --stack-name "{{ cfn_stack }}"
+      changed_when: false
+      when: cfn is changed
 
     - name: Build frontend flavor (aws)
       ansible.builtin.command: ./scripts/build-frontend.sh "{{ frontend_flavor }}"
       args:
-        chdir: "{{ playbook_dir }}/../.."   # jumps from AWS/playbooks to repo root
+        chdir: "{{ repo_root }}"
 
     - name: Upload frontend to S3
       ansible.builtin.command: >
-        aws s3 sync "frontend/dist/{{ frontend_flavor }}/" "s3://{{ bucket_name }}/" --delete
+        aws s3 sync "{{ deploy_source_dir }}/" "s3://{{ bucket_name }}/" --delete
       args:
-        chdir: "{{ playbook_dir }}/../.."   # run from repo root
+        chdir: "{{ repo_root }}"
+
+    - name: Determine CloudFront distribution id (use stack output)
+      ansible.builtin.set_fact:
+        cf_dist_id: "{{ active_cf_dist_id }}"
+
+    - name: Invalidate CloudFront cache (/*)
+      ansible.builtin.command: >
+        aws cloudfront create-invalidation
+        --distribution-id "{{ cf_dist_id }}"
+        --paths "/*"
+      when: cf_dist_id is defined and cf_dist_id | length > 0 and cf_dist_id != "None"
+
+    - name: Show CloudFormation stack status
+      ansible.builtin.command: >
+        aws cloudformation describe-stacks
+        --stack-name "{{ cfn_stack }}"
+        --query "Stacks[0].StackStatus"
+        --output text
+      register: stack_status
+      changed_when: false
+
+    - name: Stack status
+      ansible.builtin.debug:
+        var: stack_status.stdout
+
+    - name: Show last 30 CloudFormation events (debug)
+      ansible.builtin.command: >
+        aws cloudformation describe-stack-events
+        --stack-name "{{ cfn_stack }}"
+        --max-items 30
+        --query "StackEvents[].[Timestamp,ResourceStatus,ResourceType,LogicalResourceId,ResourceStatusReason]"
+        --output table
+      register: cfn_events
+      changed_when: false
+
+    - name: CloudFormation events
+      ansible.builtin.debug:
+        var: cfn_events.stdout

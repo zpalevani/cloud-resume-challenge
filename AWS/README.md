@@ -284,3 +284,132 @@ I also created a monthly AWS budget to formally cap and monitor my cloud spendin
 The budget scope covers filtered AWS cost dimensions, excluding credits and refunds, which helps me track actual usage-based spend more accurately. This setup provides a proactive financial guardrail alongside my CloudWatch billing alarm, ensuring I maintain strict cost discipline while learning and deploying AWS resources.
 
 This step reflects real-world cloud operations best practices: cost governance, visibility, and accountability, rather than treating cloud usage as “free experimentation.”
+
+## CloudFront Cache Invalidation (IaC)
+
+Task: Implement CloudFront cache invalidation as part of the deployment pipeline
+
+I implemented a repeatable, Infrastructure-as-Code–first solution for CloudFront cache invalidation. Previously, updated frontend files could be served from CloudFront’s cache, causing stale content to appear after deployments.
+
+I updated my Ansible deployment playbook to automatically trigger a CloudFront cache invalidation (/*) immediately after syncing new frontend files to the S3 bucket. The invalidation is executed via the AWS CLI within the playbook, using credentials securely stored in an encrypted Ansible Vault. This ensures that every deployment now follows a consistent, automated workflow:deploy infrastructure via CloudFormation, upload frontend assets to S3, invalidate CloudFront cache so users always receive the latest content.
+
+This change eliminates manual invalidations in the AWS Console and reinforces a fully reproducible deployment process.
+
+## CloudFront Redirect (www → apex) via IaC
+
+Task: Implement domain redirect (www → apex) using CloudFront and CloudFormation
+
+I implemented a proper domain redirect using Infrastructure as Code. Because my original CloudFront distribution was created via the AWS Console, it could not be modified through CloudFormation. To resolve this correctly, I migrated CloudFront into CloudFormation management.
+
+I extended my CloudFormation template to provision:
+
+- a new CloudFront distribution,
+- an ACM certificate (DNS-validated in us-east-1),
+- Route 53 alias records for both the apex domain and the www subdomain,
+- and a CloudFront Function that performs a 301 redirect from www to the apex domain.
+
+Before deployment, I removed the existing CNAMEs from the console-created distribution to avoid alias conflicts. The new distribution and redirect logic are now fully managed through IaC, and the redirect executes at the CloudFront edge for optimal performance.
+
+This approach avoids maintaining multiple distributions, eliminates manual redirect configuration, and aligns the project with best-practice Cloud Resume Challenge architecture.
+![alt text](image-10.png)
+
+Note: long pause on ```TASK [Deploy / update CloudFormation stack]```
+
+## Deployment Incident & Recovery Log (Cloud Resume Challenge)
+
+This section documents a real production incident encountered during deployment, the root causes, and how the system was stabilized. The goal is transparency and demonstrating infrastructure-level problem solving using IaC and automation.
+
+---
+
+### Summary
+
+During an AWS deployment of my Cloud Resume Challenge project, the site became unreachable due to DNS and CloudFormation ownership conflicts. The issue was **infrastructure-related**, not application code. Recovery required separating responsibilities between CloudFormation, Route 53, ACM, and Ansible, followed by an emergency DNS restore.
+
+---
+
+### Problems Encountered
+
+#### 1. DNS Ownership Conflict (CloudFormation vs Route 53)
+- CloudFormation attempted to manage Route 53 A/AAAA records.
+- DNS records already existed and were partially managed manually and via Ansible.
+- CloudFormation failed repeatedly with `UPDATE_FAILED` and `ROLLBACK_COMPLETE` because it could not delete or recreate records it did not fully own.
+
+#### 2. Site Outage Due to Missing DNS Records
+- Apex (`cloudwithzarapalevani.online`) and `www` A/AAAA records were deleted during rollback attempts.
+- Resulted in `DNS_PROBE_FINISHED_NXDOMAIN`, taking the site completely offline.
+
+#### 3. ACM Certificate Deletion Failures
+- CloudFormation attempted to delete an ACM certificate still in use by CloudFront.
+- Generated repeated `DELETE_FAILED (ResourceInUseException)` events.
+- Stack updates technically completed but with cleanup warnings.
+
+#### 4. CloudFront Distribution Ambiguity
+- Multiple CloudFront domain names appeared during troubleshooting.
+- DNS was temporarily pointing to an inactive distribution.
+
+#### 5. AWS Credential Context in Codespaces
+- Direct AWS CLI commands failed because Codespaces had no default AWS credentials.
+- All AWS actions had to be executed through Ansible with injected environment variables.
+
+#### 6. Frontend Content Overwritten
+- After infrastructure recovery, the site loaded but showed placeholder content.
+- Root cause: Ansible synced `frontend/shared` (template files) instead of the actual build output directory.
+- This overwrote the real HTML/CSS/JSON content in S3.
+
+---
+
+### How the Issues Were Fixed
+
+#### Separation of Responsibilities (Critical Fix)
+- **CloudFormation** now manages only:
+  - S3 static website bucket
+  - CloudFront distribution
+  - CloudFront Function (www → apex redirect)
+- **Route 53 DNS and ACM certificates** are managed **outside CloudFormation**.
+
+#### Emergency DNS Recovery
+- Implemented a one-time Ansible task to:
+  - UPSERT apex and `www` A/AAAA alias records
+  - Point traffic back to the active CloudFront distribution
+- Disabled the task after recovery to prevent future drift.
+
+#### DNS Authority Verification
+- Confirmed Namecheap nameservers delegate to Route 53.
+- Verified Route 53 is authoritative using `dig NS`.
+
+#### CloudFront Source of Truth
+- CloudFront domain is read directly from CloudFormation stack outputs.
+- Fallback lookup used only if outputs are unavailable.
+
+#### Stack Stabilization
+- Accepted ACM cleanup warnings as expected behavior.
+- CloudFormation stack stabilized at `UPDATE_COMPLETE`.
+
+#### Frontend Deployment Correction
+- Identified incorrect `deploy_source_dir` in Ansible.
+- Ensured only the actual frontend build output is synced to S3.
+- Prevented template files from overwriting real content.
+
+---
+
+### Key Learnings
+
+- Do not allow multiple systems to manage DNS for the same domain.
+- CloudFormation rollbacks can break production traffic if DNS is not isolated.
+- Emergency recovery paths are essential in IaC workflows.
+- A “successful” deployment does not guarantee correct content delivery.
+- Always verify the source directory before syncing to S3.
+- Codespaces requires explicit credential handling for AWS automation.
+
+---
+
+### Outcome
+
+- DNS restored and stable
+- CloudFront correctly serving traffic
+- CloudFormation stack healthy
+- Deployment fully automated via Ansible
+- Infrastructure now reproducible, debuggable, and resilient
+
+This incident reflects real-world infrastructure failure and recovery, handled using best practices in Infrastructure as Code.
+
