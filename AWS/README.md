@@ -269,4 +269,18 @@ This confirmed that the full request path was functioning as intended:
 Route 53 → CloudFront → S3 static website
 Reaching this state marked the completion of the AWS hosting portion of my Cloud Resume Challenge. I now have a globally distributed, HTTPS-secured static website backed by infrastructure as code, automation-first deployment, and a clean separation between shared frontend logic and cloud-specific implementations.
 
+# Dec 13
 
+## AWS Cost Control – CloudWatch Billing Alarm
+
+Today I set up an AWS CloudWatch billing alarm to actively monitor my account spend and prevent unexpected charges. The alarm tracks the EstimatedCharges metric and triggers when costs exceed $4 within a 6-hour window. This gives me early visibility before hitting my $3–$5 learning budget and reinforces good cloud hygiene.
+
+This step is important because cost monitoring is a real-world operational concern, not just a technical one. It ensures my Cloud Resume Challenge infrastructure stays lean, controlled, and production-ready while I continue experimenting with AWS services.
+![alt text](image-8.png)
+![alt text](image-9.png)
+
+I also created a monthly AWS budget to formally cap and monitor my cloud spending while working through the Cloud Resume Challenge. The budget is configured as a recurring monthly budget, using a fixed budgeting method with a total limit of $5.00 USD.
+
+The budget scope covers filtered AWS cost dimensions, excluding credits and refunds, which helps me track actual usage-based spend more accurately. This setup provides a proactive financial guardrail alongside my CloudWatch billing alarm, ensuring I maintain strict cost discipline while learning and deploying AWS resources.
+
+This step reflects real-world cloud operations best practices—cost governance, visibility, and accountability—rather than treating cloud usage as “free experimentation.”
