@@ -283,4 +283,4 @@ I also created a monthly AWS budget to formally cap and monitor my cloud spendin
 
 The budget scope covers filtered AWS cost dimensions, excluding credits and refunds, which helps me track actual usage-based spend more accurately. This setup provides a proactive financial guardrail alongside my CloudWatch billing alarm, ensuring I maintain strict cost discipline while learning and deploying AWS resources.
 
-This step reflects real-world cloud operations best practices—cost governance, visibility, and accountability, rather than treating cloud usage as “free experimentation.”
+This step reflects real-world cloud operations best practices: cost governance, visibility, and accountability, rather than treating cloud usage as “free experimentation.”
