@@ -319,15 +319,12 @@ Note: long pause on ```TASK [Deploy / update CloudFormation stack]```
 
 This section documents a real production incident encountered during deployment, the root causes, and how the system was stabilized. The goal is transparency and demonstrating infrastructure-level problem solving using IaC and automation.
 
----
-
 ### Summary
 
 During an AWS deployment of my Cloud Resume Challenge project, the site became unreachable due to DNS and CloudFormation ownership conflicts. The issue was **infrastructure-related**, not application code. Recovery required separating responsibilities between CloudFormation, Route 53, ACM, and Ansible, followed by an emergency DNS restore.
 
----
 
-### Problems Encountered
+### Various Problems That I Encountered Today
 
 #### 1. DNS Ownership Conflict (CloudFormation vs Route 53)
 - CloudFormation attempted to manage Route 53 A/AAAA records.
@@ -356,11 +353,9 @@ During an AWS deployment of my Cloud Resume Challenge project, the site became u
 - Root cause: Ansible synced `frontend/shared` (template files) instead of the actual build output directory.
 - This overwrote the real HTML/CSS/JSON content in S3.
 
----
-
 ### How the Issues Were Fixed
 
-#### Separation of Responsibilities (Critical Fix)
+#### Separation of Responsibilities 
 - **CloudFormation** now manages only:
   - S3 static website bucket
   - CloudFront distribution
@@ -390,8 +385,6 @@ During an AWS deployment of my Cloud Resume Challenge project, the site became u
 - Ensured only the actual frontend build output is synced to S3.
 - Prevented template files from overwriting real content.
 
----
-
 ### Key Learnings
 
 - Do not allow multiple systems to manage DNS for the same domain.
@@ -400,8 +393,6 @@ During an AWS deployment of my Cloud Resume Challenge project, the site became u
 - A “successful” deployment does not guarantee correct content delivery.
 - Always verify the source directory before syncing to S3.
 - Codespaces requires explicit credential handling for AWS automation.
-
----
 
 ### Outcome
 
@@ -412,4 +403,6 @@ During an AWS deployment of my Cloud Resume Challenge project, the site became u
 - Infrastructure now reproducible, debuggable, and resilient
 
 This incident reflects real-world infrastructure failure and recovery, handled using best practices in Infrastructure as Code.
+
+# Dec 14
 

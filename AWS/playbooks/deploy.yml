@@ -13,7 +13,7 @@
 
   vars:
     repo_root: "{{ playbook_dir }}/../.."
-    deploy_source_dir: "{{ repo_root }}/frontend/shared"
+    deploy_source_dir: "{{ repo_root }}/frontend/dist/{{ frontend_flavor }}"
 
     # Domain == bucket name in your setup
     domain_name: "{{ bucket_name }}"
