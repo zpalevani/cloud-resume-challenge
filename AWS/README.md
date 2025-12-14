@@ -406,3 +406,159 @@ This incident reflects real-world infrastructure failure and recovery, handled u
 
 # Dec 14
 
+Absolutely. Below is a **GitHub-README-friendly Markdown** that includes **both**:
+
+1. a **comprehensive journal entry** (what broke + how you fixed it), and
+2. a **clear Cloud Resume Challenge requirements mapping table**
+
+You can paste this **directly into `README.md`** with no edits.
+
+# Cloud Resume Challenge — Deployment & Visitor Counter Journal
+
+## Project Overview
+
+This phase of my Cloud Resume Challenge focused on completing the **visitor counter requirement** while maintaining a strict **Infrastructure-as-Code (IaC)** and **automation-first** approach.
+
+The project is deployed on AWS using:
+
+* **S3** (static website hosting)
+* **CloudFront** (HTTPS + CDN)
+* **Route 53** (DNS)
+* **CloudFormation** (infrastructure)
+* **Ansible + Ansible Vault** (deployment & secrets)
+* **AWS Lambda + API Gateway + DynamoDB** (visitor counter backend)
+* **HTML / CSS / JavaScript** (frontend)
+
+No manual AWS Console changes were used unless absolutely unavoidable.
+
+## What Went Wrong & How I Fixed It (Journal)
+
+### 1. Frontend deployed but content appeared missing
+
+**Issue:**
+After running the Ansible deployment, the site loaded but showed incomplete or empty content.
+
+**Cause:**
+The deployment playbook uploaded the wrong frontend directory. The project uses a **shared frontend template** combined with a **cloud-specific flavor config**, but the playbook pointed to a non-built source folder instead of the AWS build output.
+
+**Fix:**
+
+* Audited frontend structure (`frontend/shared`, `frontend/flavors/aws.json`, `frontend/dist/aws`)
+* Corrected the Ansible variable defining the upload source
+* Re-ran deployment with the correct build artifacts
+
+Result: The correct HTML/CSS/JS rendered properly.
+
+### 2. CloudFront kept serving old content
+
+**Issue:**
+Changes deployed to S3 did not immediately appear in the browser.
+
+**Cause:**
+CloudFront caching was serving stale assets.
+
+**Fix:**
+
+* Added CloudFront cache invalidation (`/*`) to the Ansible deployment workflow
+* Ensured invalidation runs after frontend updates
+
+Result: Changes propagated immediately after deploy.
+
+### 3. AWS credentials safety concerns
+
+**Issue:**
+Risk of AWS access keys leaking during automation.
+
+**Cause:**
+Unclear separation between encrypted secrets, runtime variables, and frontend config.
+
+**Fix:**
+
+* Stored credentials in `AWS/vaults/prod.yml` encrypted with **Ansible Vault**
+* Injected credentials only at runtime via Ansible `environment` blocks
+* Ensured frontend configs contained **no secrets**, only public API endpoints
+
+Result: Secure deployments with no credentials committed to GitHub.
+
+### 4. Designing the visitor counter backend (IaC-only)
+
+**Issue:**
+Needed a real backend counter without using AWS Console clicks.
+
+**Cause:**
+Visitor counter requires coordination between API Gateway, Lambda, and DynamoDB.
+
+**Fix:**
+
+* Implemented backend using **AWS SAM**
+* Created a DynamoDB table with on-demand billing
+* Used a single global item (`id = global`) for simplicity
+* Exposed `GET /counter` and `POST /counter` endpoints
+* Wrapped SAM deployment inside an Ansible playbook
+* Automatically extracted the API endpoint from CloudFormation outputs
+
+Result: Fully reproducible serverless backend deployed via code.
+
+### 5. Visitor counter UI flicker (`"..."` on refresh)
+
+**Issue:**
+The counter briefly displayed `"..."` on each page refresh.
+
+**Cause:**
+Frontend JS rendered a placeholder before the API response completed.
+
+**Fix:**
+
+* Removed placeholder rendering
+* Updated the counter value only after the API returned successfully
+
+Result: Seamless counter updates with no visual flicker.
+
+### 6. Counter blended into page content
+
+**Issue:**
+The visitor count lacked visual separation from static text.
+
+**Cause:**
+No styling to distinguish dynamic data.
+
+**Fix:**
+
+* Added a small rounded frame around the counter using CSS
+* Reused existing design tokens (colors, borders)
+* Avoided additional HTML wrappers or JS logic
+
+Result: Clean, intentional UI that fits the overall design.
+
+## Cloud Resume Challenge — Requirements Mapping
+
+| Requirement    | What Was Required      | Problem Encountered            | Solution                                       | What It Demonstrates               |
+| -------------- | ---------------------- | ------------------------------ | ---------------------------------------------- | ---------------------------------- |
+| HTML Resume    | Resume written in HTML | Needed reusable structure      | Shared HTML template + build-time placeholders | Clean separation of content/config |
+| CSS Styling    | Styled resume          | Counter blended into text      | Added rounded CSS frame                        | UI polish & attention to detail    |
+| Static Website | Hosted on S3           | Wrong upload directory         | Fixed Ansible source path                      | Understanding build artifacts      |
+| HTTPS          | Secure site            | Cached content issues          | CloudFront invalidation                        | CDN & cache control                |
+| DNS            | Custom domain          | Registrar ↔ Route 53 confusion | Proper NS delegation                           | Real DNS management                |
+| JavaScript     | Dynamic behavior       | Flicker on refresh             | Removed placeholder                            | UX-aware JS                        |
+| Database       | Persistent counter     | Needed low-cost storage        | DynamoDB (on-demand)                           | Serverless cost control            |
+| API            | JS must not hit DB     | Needed abstraction             | Lambda + API Gateway                           | Proper backend layering            |
+| Python         | Backend logic          | Atomic increments              | DynamoDB `ADD` operation                       | Safe concurrent updates            |
+| IaC            | Reproducible infra     | Risk of console drift          | CloudFormation + SAM                           | Infrastructure discipline          |
+| Security       | No leaked secrets      | Credential exposure risk       | Ansible Vault + env vars                       | Secure automation                  |
+| Automation     | CI/CD mindset          | Manual fixes tempting          | Forced fixes via Ansible                       | Production-grade workflow          |
+
+## Final Outcome
+
+* Fully automated AWS deployment
+* Secure, reproducible infrastructure
+* Real serverless backend
+* Clean frontend integration
+* Production-grade debugging across DNS, CDN, build, API, and UI layers
+
+This phase demonstrated **real cloud problem-solving**, not just tutorial execution.
+
+If you want next (say one word):
+
+* **SHORT** → compressed README version
+* **BLOG** → narrative blog post
+* **INTERVIEW** → talking points for interviews

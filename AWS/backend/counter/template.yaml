@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Cloud Resume Challenge - Visitor Counter Backend (HTTP API)
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 5
+    MemorySize: 128
+    Architectures:
+      - x86_64
+
+Parameters:
+  CounterTableName:
+    Type: String
+    Default: cloud-resume-counter
+
+  AllowedOrigin:
+    Type: String
+    Description: Allowed CORS origin (your CloudFront URL, e.g. https://cloudwithzarapalevani.online)
+
+  ThrottleBurstLimit:
+    Type: Number
+    Default: 10
+
+  ThrottleRateLimit:
+    Type: Number
+    Default: 5
+
+Resources:
+  CounterTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref CounterTableName
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: counter_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: counter_id
+          KeyType: HASH
+
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - !Ref AllowedOrigin
+        AllowMethods:
+          - GET
+          - POST
+        AllowHeaders:
+          - content-type
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: !Ref ThrottleBurstLimit
+        ThrottlingRateLimit: !Ref ThrottleRateLimit
+
+  CounterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: function/
+      Handler: app.handler
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref CounterTableName
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CounterTableName
+      Events:
+        GetCounter:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /counter
+            Method: GET
+        IncrementCounter:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /counter
+            Method: POST
+
+Outputs:
+  ApiEndpoint:
+    Description: HTTP API endpoint base URL
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"

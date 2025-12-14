@@ -1,0 +1,116 @@
+- name: Deploy SAM backend (visitor counter)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars_files:
+    - ../vaults/prod.yml
+
+  environment:
+    AWS_DEFAULT_REGION: "{{ aws_region }}"
+    AWS_ACCESS_KEY_ID: "{{ aws_access_key_id }}"
+    AWS_SECRET_ACCESS_KEY: "{{ aws_secret_access_key }}"
+
+  vars:
+    repo_root: "{{ playbook_dir }}/../.."
+    backend_dir: "{{ repo_root }}/AWS/backend/counter"
+    sam_template: "{{ backend_dir }}/template.yaml"
+
+    # Stack name for backend (keep separate from frontend stack)
+    backend_stack: "{{ cfn_stack }}-backend-counter"
+
+    # Use your live site as CORS allow-origin (https apex)
+    allowed_origin: "https://{{ bucket_name }}"
+
+    # Throttling (low cost protection)
+    throttle_burst: 10
+    throttle_rate: 5
+
+  tasks:
+    - name: Fail fast if required vars are missing
+      ansible.builtin.assert:
+        that:
+          - aws_region is defined and aws_region | length > 0
+          - aws_access_key_id is defined and aws_access_key_id | length > 0
+          - aws_secret_access_key is defined and aws_secret_access_key | length > 0
+          - bucket_name is defined and bucket_name | length > 0
+          - cfn_stack is defined and cfn_stack | length > 0
+        fail_msg: "Missing required vars in AWS/vaults/prod.yml (aws_region, aws keys, bucket_name, cfn_stack)."
+      changed_when: false
+
+    - name: Sanity check AWS credentials (who am I)
+      ansible.builtin.command: aws sts get-caller-identity
+      register: whoami
+      changed_when: false
+
+    - name: Show AWS identity
+      ansible.builtin.debug:
+        var: whoami.stdout
+
+    - name: Check if SAM CLI is installed
+      ansible.builtin.command: sam --version
+      register: sam_ver
+      changed_when: false
+      failed_when: false
+
+    - name: Install SAM CLI (Linux x86_64) if missing
+      ansible.builtin.shell: |
+        set -euo pipefail
+        cd /tmp
+        curl -sSL -o aws-sam-cli-linux-x86_64.zip \
+          https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip
+        unzip -q -o aws-sam-cli-linux-x86_64.zip -d sam-install
+        sudo ./sam-install/install
+      args:
+        executable: /bin/bash
+      when: sam_ver.rc != 0
+
+    - name: Confirm SAM CLI version
+      ansible.builtin.command: sam --version
+      register: sam_ver_after
+      changed_when: false
+
+    - name: Show SAM version
+      ansible.builtin.debug:
+        var: sam_ver_after.stdout
+
+    - name: Validate SAM template
+      ansible.builtin.command: sam validate --template-file "{{ sam_template }}"
+      args:
+        chdir: "{{ backend_dir }}"
+      changed_when: false
+
+    - name: Build SAM application
+      ansible.builtin.command: sam build --template-file "{{ sam_template }}"
+      args:
+        chdir: "{{ backend_dir }}"
+
+    - name: Deploy SAM application (creates/updates stack)
+      ansible.builtin.command: >
+        sam deploy
+        --template-file "{{ backend_dir }}/.aws-sam/build/template.yaml"
+        --stack-name "{{ backend_stack }}"
+        --capabilities CAPABILITY_IAM
+        --no-confirm-changeset
+        --no-fail-on-empty-changeset
+        --resolve-s3
+        --parameter-overrides
+          CounterTableName=cloud-resume-counter
+          AllowedOrigin={{ allowed_origin }}
+          ThrottleBurstLimit={{ throttle_burst }}
+          ThrottleRateLimit={{ throttle_rate }}
+      args:
+        chdir: "{{ backend_dir }}"
+
+    - name: Read API endpoint output from backend stack
+      ansible.builtin.command: >
+        aws cloudformation describe-stacks
+        --stack-name "{{ backend_stack }}"
+        --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue | [0]"
+        --output text
+      register: api_endpoint
+      changed_when: false
+
+    - name: Backend API endpoint
+      ansible.builtin.debug:
+        msg: "Counter API: {{ api_endpoint.stdout }}"
