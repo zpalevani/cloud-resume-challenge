@@ -404,7 +404,7 @@ During an AWS deployment of my Cloud Resume Challenge project, the site became u
 
 This incident reflects real-world infrastructure failure and recovery, handled using best practices in Infrastructure as Code.
 
-# Dec 14
+# Dec 14 (Backend)
 
 # Deployment & Visitor Counter Journal
 
