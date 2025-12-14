@@ -315,9 +315,9 @@ This approach avoids maintaining multiple distributions, eliminates manual redir
 
 Note: long pause on ```TASK [Deploy / update CloudFormation stack]```
 
-## Deployment Incident & Recovery Log (Cloud Resume Challenge)
+## Deployment Incident & Recovery Log
 
-This section documents a real production incident encountered during deployment, the root causes, and how the system was stabilized. The goal is transparency and demonstrating infrastructure-level problem solving using IaC and automation.
+This section documents a production incident encountered during deployment, the root causes, and how the system was stabilized. The goal is transparency and demonstrating infrastructure-level problem solving using IaC and automation.
 
 ### Summary
 
@@ -406,14 +406,7 @@ This incident reflects real-world infrastructure failure and recovery, handled u
 
 # Dec 14
 
-Absolutely. Below is a **GitHub-README-friendly Markdown** that includes **both**:
-
-1. a **comprehensive journal entry** (what broke + how you fixed it), and
-2. a **clear Cloud Resume Challenge requirements mapping table**
-
-You can paste this **directly into `README.md`** with no edits.
-
-# Cloud Resume Challenge — Deployment & Visitor Counter Journal
+# Deployment & Visitor Counter Journal
 
 ## Project Overview
 
@@ -554,11 +547,3 @@ Result: Clean, intentional UI that fits the overall design.
 * Real serverless backend
 * Clean frontend integration
 * Production-grade debugging across DNS, CDN, build, API, and UI layers
-
-This phase demonstrated **real cloud problem-solving**, not just tutorial execution.
-
-If you want next (say one word):
-
-* **SHORT** → compressed README version
-* **BLOG** → narrative blog post
-* **INTERVIEW** → talking points for interviews
