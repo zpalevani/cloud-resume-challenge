@@ -280,6 +280,40 @@
       args:
         chdir: "{{ repo_root }}"
 
+    # ---------------------------
+    # NEW: make asset deployment deterministic
+    # ---------------------------
+
+    - name: Ensure deploy assets folder exists
+      ansible.builtin.file:
+        path: "{{ deploy_source_dir }}/assets"
+        state: directory
+        mode: "0755"
+
+    - name: Fail fast if required images are missing in shared assets
+      ansible.builtin.stat:
+        path: "{{ repo_root }}/frontend/shared/assets/{{ item }}"
+      loop:
+        - zara.jpg
+        - aws-cloud-practitioner-badge.png
+      register: asset_stats
+
+    - name: Assert required images exist
+      ansible.builtin.assert:
+        that:
+          - asset_stats.results | map(attribute='stat.exists') | list | min
+        fail_msg: >
+          Missing one or more required images in frontend/shared/assets/.
+          Expected: zara.jpg and aws-cloud-practitioner-badge.png
+      changed_when: false
+
+    - name: Copy shared assets into built dist folder (so S3 sync uploads them)
+      ansible.builtin.command: >
+        rsync -a --delete
+        "{{ repo_root }}/frontend/shared/assets/"
+        "{{ deploy_source_dir }}/assets/"
+      changed_when: true
+
     - name: Upload frontend to S3
       ansible.builtin.command: >
         aws s3 sync "{{ deploy_source_dir }}/" "s3://{{ bucket_name }}/" --delete

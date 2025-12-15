@@ -7,42 +7,102 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <main class="container">
-    <header class="header">
-      <div class="badge">__PROVIDER_BADGE__</div>
-      <h1>__HERO_TITLE__</h1>
-      <p class="subtitle">__HERO_SUBTITLE__</p>
-    </header>
+  <header class="topbar">
+    <a class="brand" href="./index.html" aria-label="Home">
+      <span class="brand-dot"></span>
+      <span>Zara Palevani</span>
+    </a>
 
-    <section class="card">
-      <h2>About this build</h2>
-      <ul>
-        <li><strong>Domain:</strong> __DOMAIN__</li>
-        <li><strong>Cloud:</strong> __PROVIDER_NAME__</li>
-        <li><strong>Infrastructure:</strong> __IAC__</li>
-        <li><strong>Deployment:</strong> __DEPLOYMENT__</li>
-      </ul>
+    <nav class="nav">
+      <a class="nav-link is-active" href="./index.html">Home</a>
+      <a class="nav-link" href="./blog.html">Blog</a>
+      <a class="nav-link" href="./project-details.html">Project Details</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-left">
+        <p class="kicker">__PROVIDER_BADGE__</p>
+        <h1 class="hero-title">Zara Palevani</h1>
+        <p class="hero-subtitle">Cloud Enthusiast | Solutions Architect Aspirant | AWS Certified</p>
+
+        <div class="hero-actions">
+          <a class="btn btn-ghost" href="./blog.html">Read blogs</a>
+        </div>
+
+        <div class="social">
+          <a class="icon-link" href="https://github.com/zpalevani" target="_blank" rel="noreferrer" aria-label="GitHub">
+            <!-- GitHub SVG -->
+            <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+              <path d="M12 .5C5.73.5.75 5.7.75 12.2c0 5.2 3.44 9.62 8.2 11.18.6.12.82-.27.82-.58v-2.2c-3.34.75-4.04-1.66-4.04-1.66-.55-1.45-1.34-1.84-1.34-1.84-1.1-.78.09-.76.09-.76 1.22.09 1.86 1.29 1.86 1.29 1.08 1.91 2.83 1.36 3.52 1.04.11-.81.42-1.36.77-1.67-2.67-.31-5.48-1.38-5.48-6.14 0-1.36.46-2.47 1.22-3.34-.12-.31-.53-1.58.12-3.29 0 0 1.01-.33 3.3 1.27a11 11 0 0 1 3-.42c1.02 0 2.05.14 3 .42 2.28-1.6 3.3-1.27 3.3-1.27.65 1.71.24 2.98.12 3.29.76.87 1.22 1.98 1.22 3.34 0 4.77-2.81 5.82-5.49 6.13.43.39.82 1.15.82 2.31v3.43c0 .31.22.7.83.58 4.76-1.56 8.2-5.98 8.2-11.18C23.25 5.7 18.27.5 12 .5z"/>
+            </svg>
+          </a>
+
+          <a class="icon-link" href="https://www.linkedin.com/in/zara-palevani/" target="_blank" rel="noreferrer" aria-label="LinkedIn">
+            <!-- LinkedIn SVG -->
+            <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+              <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.15 1.45-2.15 2.95v5.66H9.3V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.35-1.85 3.58 0 4.24 2.36 4.24 5.43v6.31zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.78C.8 0 0 .77 0 1.72v20.56C0 23.23.8 24 1.78 24h20.44C23.2 24 24 23.23 24 22.28V1.72C24 .77 23.2 0 22.22 0z"/>
+            </svg>
+          </a>
+
+          <div class="counter-pill" title="Total visits">
+            <span class="counter-label">Views</span>
+            <span id="view-count">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <img class="avatar" src="./assets/zara.jpg" alt="Zara Palevani" />
+
+        <a class="badge-card" href="https://www.credly.com/badges/fd8400d6-61e5-459b-8c29-9a266eaa664b/linked_in_profile" target="_blank" rel="noreferrer">
+          <img class="badge-img" src="./assets/aws-cloud-practitioner-badge.png" alt="AWS Certified Cloud Practitioner badge" />
+          <div class="badge-meta">
+            <div class="badge-title">AWS Certified Cloud Practitioner</div>
+            <div class="badge-subtitle">Issued to Zahra Pahlevani • Aug 07, 2023 • Expires Aug 07, 2026</div>
+            <div class="badge-cta">Verify on Credly →</div>
+          </div>
+        </a>
+      </div>
     </section>
 
-    <section class="card">
-      <h2>What I’m proving</h2>
-      <ol>
-        <li>Infrastructure is reproducible (IaC).</li>
-        <li>Deployments are automated (Ansible).</li>
-        <li>DNS + hosting routes real traffic to cloud resources.</li>
-      </ol>
+    <section class="grid">
+      <article class="card">
+        <h2>What I build</h2>
+        <p class="muted">
+          A secure, low-cost cloud-hosted resume site with automated deployments and a serverless visitor counter.
+        </p>
+      </article>
 
-      <p class="note">
-        This page is generated from a shared template + a cloud-specific flavor config.
-      </p>
+      <article class="card">
+        <h2>What I’m practicing</h2>
+        <ul class="list">
+          <li>Infrastructure as Code (repeatable deployments)</li>
+          <li>CI/CD mindset (automate everything)</li>
+          <li>Serverless patterns (API + Lambda + DynamoDB)</li>
+        </ul>
+      </article>
 
-      <p class="note">
-        Views: <span id="view-count">—</span>
-      </p>
+      <article class="card">
+        <h2>Next up</h2>
+        <ul class="list">
+          <li>More posts about what broke & how I fixed it</li>
+          <li>Stronger monitoring + guardrails (budgets/alerts)</li>
+          <li>Expand content with more projects</li>
+        </ul>
+      </article>
     </section>
 
     <footer class="footer">
-      <p>© __YEAR__ __YOUR_NAME__</p>
+      <div class="footer-left">
+        <p>© __YEAR__ Zara Palevani</p>
+        <p class="footer-note">Built with AWS (S3 + CloudFront) and serverless counter.</p>
+      </div>
+      <div class="footer-right">
+        <a class="footer-link" href="./project-details.html">Project Details</a>
+        <a class="footer-link" href="./blog.html">Blog</a>
+      </div>
     </footer>
   </main>
 

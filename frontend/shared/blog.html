@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Blog — Zara Palevani</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html">
+      <span class="brand-dot"></span>
+      <span>Zara Palevani</span>
+    </a>
+    <nav class="nav">
+      <a class="nav-link" href="./index.html">Home</a>
+      <a class="nav-link is-active" href="./blog.html">Blog</a>
+      <a class="nav-link" href="./project-details.html">Project Details</a>
+      <a class="nav-link" href="./contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="page-head">
+      <h1>Blog</h1>
+      <p class="muted">Short posts about what I’m learning while building in AWS.</p>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- NEWEST POST — ADD FUTURE POSTS ABOVE THIS LINE        -->
+    <!-- ===================================================== -->
+
+    <article class="post card">
+      <div class="post-meta">Dec 2025 • AWS • Cost Management</div>
+
+      <h2 class="post-title">
+        Cost Management by Design: Keeping My AWS Cloud Resume Practically Free
+      </h2>
+
+      <p class="muted">
+        One of my explicit goals while building my Cloud Resume project was cost discipline —
+        not hoping the bill stays low, but designing the architecture so cost is controlled by default.
+      </p>
+
+      <p>
+        From the beginning, I made a conscious decision to favor a static-first, serverless architecture.
+        This meant avoiding always-on infrastructure and choosing services that either cost nothing at low
+        scale or only charge when they are actually used.
+      </p>
+
+      <h3>Key cost decisions</h3>
+      <ul class="list">
+        <li>Static hosting with Amazon S3 instead of EC2</li>
+        <li>CloudFront caching to reduce origin requests and bandwidth costs</li>
+        <li>Serverless visitor counter using Lambda, API Gateway, and DynamoDB (on-demand)</li>
+        <li>AWS Budgets with alerts as cost guardrails</li>
+      </ul>
+
+      <p>
+        This project reinforced an important lesson for me:
+        <strong>good cloud engineering is as much about what you don’t deploy as what you do.</strong>
+      </p>
+    </article>
+
+    <!-- ===================================================== -->
+    <!-- OLDER POSTS                                          -->
+    <!-- ===================================================== -->
+
+    <article class="post card">
+      <div class="post-meta">Dec 2025 • Cloud Resume Challenge</div>
+
+      <h2 class="post-title">
+        What broke (and how I fixed it): CloudFront, redirects, and the visitor counter
+      </h2>
+
+      <p class="muted">
+        This build taught me that “simple” static hosting becomes real engineering once you add HTTPS,
+        DNS, caching, and a serverless backend.
+      </p>
+
+      <p>
+        My biggest time-sinks were CloudFront cache behavior, redirect rules, and wiring the
+        visitor counter to the correct API endpoint. Each issue forced me to slow down and
+        understand how the pieces actually interact in production.
+      </p>
+
+      <h3>Key lessons</h3>
+      <ul class="list">
+        <li>CloudFront will happily serve old content until you invalidate (or version files).</li>
+        <li>Redirect logic can look “correct” but still fail because of cached behavior.</li>
+        <li>Front-end code should never talk directly to DynamoDB — use API Gateway and Lambda.</li>
+      </ul>
+
+      <p class="muted">
+        Next up: documenting my full CI/CD flow end-to-end so deployments become boring (the goal).
+      </p>
+    </article>
+
+    <footer class="footer">
+      <div class="footer-left">
+        <p>© __YEAR__ Zara Palevani</p>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>
