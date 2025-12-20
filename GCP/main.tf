@@ -59,7 +59,7 @@ resource "google_compute_managed_ssl_certificate" "static_site_cert" {
   name = "cloudwith-cert" # must match the cert name in GCP
 
   managed {
-    domains = ["cloudwith.zarapalevani.com"]
+    domains = ["cloudwithzarapalevani.site"]
   }
 
   lifecycle {
