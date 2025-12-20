@@ -2,6 +2,6 @@
 
 ## Projects
 - [AWS README](AWS/README.md)
-- GCP:
+- [GCP README](GCP/README.md)
 - Azure:
 - Frontend: 
