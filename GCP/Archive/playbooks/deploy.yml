@@ -5,24 +5,21 @@
   gather_facts: false
 
   vars:
-    # Terraform project is the GCP/ directory (where main.tf, terraform.tfvars live)
     terraform_dir: "{{ playbook_dir }}/.."
-
-    # Path to the GCP service account JSON inside the Codespace
     gcp_credentials_file: "{{ playbook_dir }}/../vaults/gcp-key.json"
 
   pre_tasks:
-    - name: Verify that terraform is installed
+    - name: Verify Terraform is installed
       command: terraform version
       register: terraform_check
       failed_when: terraform_check.rc != 0
       changed_when: false
 
   tasks:
-    - name: Run terraform init + apply
+    - name: Terraform init and apply
       community.general.terraform:
         project_path: "{{ terraform_dir }}"
-        state: present          # equivalent to: terraform apply
-        force_init: true        # always run terraform init first
+        state: present
+        force_init: true
       environment:
         GOOGLE_APPLICATION_CREDENTIALS: "{{ gcp_credentials_file }}"

@@ -1,12 +1,137 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>Zara's Blog</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Zara Palevani | Blog</title>
+  <meta name="description" content="Blog posts for the Cloud Resume Challenge (GCP)." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@0..1&wght@200..700&GRAD@-25..200&opsz@20..48" rel="stylesheet">
+
+  <!-- ✅ Correct absolute asset paths -->
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+  <script defer src="/assets/js/main.js"></script>
 </head>
+
 <body>
-    <h1>Blog Coming Soon</h1>
-    <p>I will be posting my cloud, AI, and analytics content here.</p>
-    <a href="index.html">Back to Home</a>
+  <header class="appbar">
+    <div class="appbar__left">
+      <a class="brand" href="/">cloudwithzarapalevani</a>
+    </div>
+
+    <nav class="appbar__nav" aria-label="Primary">
+      <a class="navlink" href="/">Home</a>
+      <a class="navlink navlink--active" href="/blog/">Blog</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="section">
+      <div class="section__header">
+        <h1 class="pageTitle">Blog</h1>
+        <p class="muted">
+          Short, practical write-ups. No fluff. Focused on what I built, the tradeoffs, and what I’d do differently next time.
+        </p>
+      </div>
+
+      <div class="stack">
+        <article class="card post">
+          <div class="post__meta">
+            <span class="tag">
+              <span class="material-symbols-rounded">build</span>
+              IaC
+            </span>
+            <span class="muted">~3 min read</span>
+          </div>
+
+          <h2>1) Why IaC-first matters (even for “simple” sites)</h2>
+
+          <p class="muted">
+            Cloud projects fail in boring ways: missing steps, inconsistent environments, and “it worked yesterday.”
+            IaC fixes that by making infrastructure repeatable, reviewable, and version-controlled.
+          </p>
+
+          <div class="post__body">
+            <ul class="list">
+              <li>Every change becomes a commit with history</li>
+              <li>Setup becomes predictable and teachable</li>
+              <li>You can rebuild from zero without panic</li>
+            </ul>
+
+            <p class="muted">
+              For this project, I’m treating the static website like a production system: code-defined resources, automated deploys, and explicit cost awareness.
+            </p>
+          </div>
+        </article>
+
+        <article class="card post">
+          <div class="post__meta">
+            <span class="tag">
+              <span class="material-symbols-rounded">public</span>
+              Web
+            </span>
+            <span class="muted">~4 min read</span>
+          </div>
+
+          <h2>2) Static doesn’t mean “easy”: DNS, HTTPS, and caching</h2>
+
+          <p class="muted">
+            The hard part isn’t writing HTML. The hard part is making your site reachable, fast, and secure—under your own domain.
+          </p>
+
+          <div class="post__body">
+            <ul class="list">
+              <li>DNS can be simple until it isn’t (records, TTLs, propagation)</li>
+              <li>HTTPS is non-negotiable for credibility</li>
+              <li>CDNs help performance—and can hide mistakes if you don’t understand caching</li>
+            </ul>
+
+            <p class="muted">
+              I’m using Cloudflare for CDN/DNS to control cost and keep performance strong. The goal is still the same: understand what’s happening at the edge.
+            </p>
+          </div>
+        </article>
+
+        <article class="card post">
+          <div class="post__meta">
+            <span class="tag">
+              <span class="material-symbols-rounded">swap_horiz</span>
+              API
+            </span>
+            <span class="muted">~5 min read</span>
+          </div>
+
+          <h2>3) Visitor counter: tiny feature, real architecture</h2>
+
+          <p class="muted">
+            A counter looks trivial, but it forces real backend thinking: data storage, an API boundary, auth, CORS, and deployment.
+          </p>
+
+          <div class="post__body">
+            <ul class="list">
+              <li>Frontend calls an API endpoint (not the database directly)</li>
+              <li>API updates a database value</li>
+              <li>Deployment is automated with tests</li>
+            </ul>
+
+            <p class="muted">
+              Next phase: Firestore + Cloud Function (or Cloud Run) + API Gateway, provisioned via Terraform, deployed via GitHub Actions.
+            </p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <span>© <span id="year"></span> Zara Palevani</span>
+        <span class="dot">•</span>
+        <a class="muted" href="/">Back to Home</a>
+      </div>
+    </footer>
+  </main>
 </body>
 </html>

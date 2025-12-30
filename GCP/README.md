@@ -443,3 +443,68 @@ pipx install --include-deps ansible
 
 ## set up vault with gcp cred
 we'll need store the contents of the gcp key in our vault.
+
+# Dec 29, 2025
+
+I terminated and archived my first attaempt at successfully completing the frontend part of this project due to the increasing cost of CDN fees. After completing my AWS version of tihs project and watching the videos, I came up with a cost efficient plan and resumed work again. 
+
+## Technical Journal — Phase 1 (Frontend)
+
+### Goal
+Build a modern, clean resume website using plain HTML/CSS/JavaScript, designed to be deployed as a static site on Google Cloud Storage and delivered through Cloudflare (free tier) for CDN and DNS.
+
+This phase is intentionally frontend-only. The visitor counter is shown on the homepage but is not wired to a backend yet. That integration is Phase 2.
+
+### What I Built
+- A multi-page static site:
+  - `/` Home (photo, short bio, resume highlights, visitor counter placeholder)
+  - `/blog/` Blog page with 3 short posts documenting the journey
+  - `/badges/` A page listing Google Cloud learning badges (placeholder links for now)
+- A Material-inspired design system:
+  - Roboto typography
+  - Material Symbols icons
+  - “Card” layout, responsive grid, and a mobile drawer menu
+- No frameworks. No build tools. Just fast, readable web fundamentals.
+
+### Folder Structure
+
+GCP/
+  site/
+    index.html
+    blog/
+      index.html
+    badges/
+      index.html
+    assets/
+      css/
+        styles.css
+      js/
+        main.js
+      img/
+        profile.jpg        <-- you add your photo (same filename)
+
+
+### Decisions & Tradeoffs
+- I kept the frontend pure static (HTML/CSS/JS) to reduce complexity and cost.
+- I used Cloudflare for CDN/DNS to stay in the free tier and avoid surprises.
+- The visitor counter is shown as a UI element now, but I did not fake a number — it will be connected to a real API later.
+
+### How I Tested Locally (Codespaces)
+- Ran a local static server:
+  - `cd GCP/site`
+  - `python -m http.server 8080`
+- Verified:
+  - Navigation works
+  - Mobile menu works
+  - Layout is responsive
+  - Pages load with correct asset paths
+
+### Next (Phase 2)
+- Infrastructure as Code for:
+  - Cloud Storage bucket + permissions
+  - Cloudflare DNS records and caching behavior
+- Backend visitor counter:
+  - Firestore + serverless compute + API Gateway
+  - CI/CD with GitHub Actions
+  - Cost controls so nothing runs wild
+
