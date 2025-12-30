@@ -827,4 +827,4 @@ echo "${#CLOUDFLARE_API_TOKEN}"
 
 This phase closed with a fully working, cost-safe, IaC-driven static frontend.
 
-![Description](zp frontend gcp.png)
+![ZP Frontend GCP](zp%20frontend%20gcp.png)
