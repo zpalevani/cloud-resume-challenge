@@ -508,3 +508,323 @@ GCP/
   - CI/CD with GitHub Actions
   - Cost controls so nothing runs wild
 
+## Technical Journal — Phase 1.5: IaC Deploy (GCS + Cloudflare) + Debugging “Why CSS Won’t Load”
+
+> Date: 2025-12-29 / 2025-12-30
+> Repo: `zpalevani/cloud-resume-challenge`
+> Working folder: `/GCP` (Terraform lives in `/GCP/terraform`)
+> Goal: Deploy my **static frontend** (HTML/CSS/JS) to **Google Cloud Storage** using **Terraform**, and front it with **Cloudflare (Free tier)** for DNS/CDN/edge routing — **without Google Cloud CDN** (cost-safe).
+> Constraints: IaC-first, minimal console usage, zero surprise costs.
+
+---
+
+## What I had before starting today
+
+I already had a complete frontend that rendered correctly in Codespaces using a local web server.
+
+Frontend structure:
+
+* `index.html` (homepage)
+* `blog/index.html`
+* `404.html`
+* `assets/`
+
+  * `css/styles.css`
+  * `js/main.js`
+  * `img/profile.png`
+
+I validated locally using:
+
+```bash
+cd GCP/site
+python -m http.server 8080
+```
+
+The UI rendered correctly with styling, layout, and navigation. This confirmed the problem later was **not frontend code**, but infrastructure/routing.
+
+---
+
+## Step 1 — Terraform directory + state sanity check
+
+Initial Terraform commands failed because I ran them from the wrong directory.
+
+Errors observed:
+
+* `terraform apply` → *No configuration files*
+* `terraform state list` → *No state file was found*
+
+Fix: move into the actual Terraform directory.
+
+```bash
+cd /workspaces/cloud-resume-challenge/GCP/terraform
+ls
+```
+
+I confirmed state existed and objects were tracked:
+
+```bash
+terraform state list | grep google_storage_bucket_object
+```
+
+This showed:
+
+* `index.html`
+* `blog/index.html`
+* `assets/css/styles.css`
+* `assets/js/main.js`
+* `assets/img/profile.png`
+* `404.html`
+
+This confirmed Terraform **had already uploaded files correctly**.
+
+---
+
+## Step 2 — Fix Terraform syntax error in `main.tf`
+
+Terraform failed with:
+
+```
+Error: Argument or block definition required
+```
+
+Root cause: an invalid multiline ternary expression in `cache_control`.
+
+Fix: rewrite ternary as a single-line expression compatible with HCL.
+
+After fixing:
+
+```bash
+terraform fmt
+```
+
+Terraform parsed the file successfully.
+
+---
+
+## Step 3 — Provider authentication (Google + Cloudflare)
+
+### 3A — Google provider credentials
+
+Terraform failed with:
+
+```
+Attempted to load application default credentials
+```
+
+Fix: explicitly export the service account key path.
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="/workspaces/cloud-resume-challenge/GCP/terraform/gcp-key.json"
+ls -l "$GOOGLE_APPLICATION_CREDENTIALS"
+```
+
+Confirmed the key existed and was readable.
+
+### 3B — Cloudflare provider token
+
+Terraform also failed with:
+
+```
+must provide exactly one of api_key, api_token, or api_user_service_key
+```
+
+Decision: use `CLOUDFLARE_API_TOKEN` as an environment variable (best practice).
+
+Verification:
+
+```bash
+echo "${#CLOUDFLARE_API_TOKEN}"
+```
+
+Non-zero length confirmed the token was set.
+
+---
+
+## Step 4 — Stable Terraform apply
+
+With credentials fixed:
+
+```bash
+terraform init
+terraform plan
+terraform apply
+```
+
+Result:
+
+* No drift
+* No errors
+* Bucket, IAM, and objects confirmed
+
+Terraform outputs included:
+
+* bucket name
+* Cloudflare zone id
+* GCS website URL
+
+---
+
+## Step 5 — CSS not loading (key investigation)
+
+Symptoms:
+
+* Local site worked perfectly
+* Objects existed in the bucket
+* Direct GCS URL for CSS worked
+* Custom domain showed XML or `NoSuchBucket`
+
+Key observation:
+
+```text
+Files exist → routing is wrong
+```
+
+This ruled out frontend bugs and Terraform upload issues.
+
+---
+
+## Step 6 — Bucket name vs domain confusion
+
+I attempted to create a bucket named exactly:
+
+```
+cloudwithzarapalevani.site
+```
+
+Terraform failed with:
+
+```
+Error 403: Another user owns the domain or a parent domain
+```
+
+Google requires **Search Console domain ownership verification** for domain-named buckets.
+
+Search Console showed:
+
+* Ownership **auto-verified**
+* Method: Domain provider
+* No manual TXT record provided
+
+Decision:
+
+* Do **not** block on domain-named bucket
+* Keep cost-safe bucket name: `cloudwithzarapalevani-site`
+* Use Cloudflare Worker as the routing layer
+
+---
+
+## Step 7 — Cloudflare Worker as the routing layer
+
+Worker logic:
+
+* Rewrite `/` → `/index.html`
+* Fetch assets from GCS using:
+
+  ```
+  https://storage.googleapis.com/cloudwithzarapalevani-site/<path>
+  ```
+
+Worker preview rendered the **full site with CSS**, confirming:
+
+* GCS origin works
+* Worker code works
+
+But the **domain still failed**.
+
+---
+
+## Step 8 — 522 errors (real root cause)
+
+Domain showed:
+
+```
+Error 522 — Connection timed out
+```
+
+Cloudflare status page:
+
+* Browser: Working
+* Cloudflare: Working
+* Host: Error
+
+Meaning: Cloudflare could not reach the configured origin.
+
+Root cause:
+
+* Worker route existed only for:
+
+  ```
+  cloudwithzarapalevani.site/*
+  ```
+* Traffic was also hitting:
+
+  ```
+  www.cloudwithzarapalevani.site
+  ```
+
+Those requests **bypassed the worker** and timed out.
+
+---
+
+## Step 9 — Final fix (worked immediately)
+
+### 9A — Add missing Worker route
+
+Added **both** routes:
+
+* `cloudwithzarapalevani.site/*`
+* `www.cloudwithzarapalevani.site/*`
+
+### 9B — DNS alignment
+
+Confirmed DNS:
+
+* Apex and `www` proxied through Cloudflare
+* No active records pointing directly to GCS
+
+---
+
+## Final result
+
+✅ Site renders fully with CSS on the custom domain
+✅ Worker preview and live domain match
+✅ Static site hosted on GCS via Terraform
+✅ Cloudflare Free tier only (no paid GCP networking)
+✅ Clean separation: storage (GCS) + routing (Worker) + DNS/CDN (Cloudflare)
+
+---
+
+## Key commands used
+
+```bash
+# Local frontend check
+python -m http.server 8080
+
+# Terraform lifecycle
+terraform fmt
+terraform init
+terraform plan
+terraform apply
+
+# State inspection
+terraform state list | grep google_storage_bucket_object
+
+# Google auth
+export GOOGLE_APPLICATION_CREDENTIALS="/workspaces/cloud-resume-challenge/GCP/terraform/gcp-key.json"
+
+# Cloudflare token sanity check
+echo "${#CLOUDFLARE_API_TOKEN}"
+```
+
+---
+
+## Takeaways
+
+* When CSS fails on static sites, **check routing before code**
+* Worker preview working ≠ domain working
+* Always include both apex and `www` routes
+* Cloudflare + GCS is powerful and cheap, but unforgiving if miswired
+
+This phase closed with a fully working, cost-safe, IaC-driven static frontend.
+
+![Description](zp frontend gcp.png)
