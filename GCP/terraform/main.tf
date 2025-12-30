@@ -7,32 +7,7 @@ provider "google" {
 }
 
 provider "cloudflare" {
-  # Token is picked up from CLOUDFLARE_API_TOKEN env var (in Terraform Cloud env vars)
-}
-
-########################################
-# Locals for MIME Types & Files
-########################################
-
-locals {
-  # IMPORTANT for Terraform Cloud remote runs:
-  # Use repo-root based path, not path.module relative traversal
-  site_dir = "${path.root}/GCP/site"
-  files    = fileset(local.site_dir, "**")
-
-  mime_types = {
-    ".html" = "text/html"
-    ".css"  = "text/css"
-    ".js"   = "application/javascript"
-    ".png"  = "image/png"
-    ".jpg"  = "image/jpeg"
-    ".jpeg" = "image/jpeg"
-    ".gif"  = "image/gif"
-    ".svg"  = "image/svg+xml"
-    ".ico"  = "image/x-icon"
-    ".json" = "application/json"
-    ".txt"  = "text/plain"
-  }
+  # Token is picked up from CLOUDFLARE_API_TOKEN (Terraform Cloud env var)
 }
 
 ########################################
@@ -40,8 +15,6 @@ locals {
 ########################################
 
 resource "google_storage_bucket" "site" {
-  # IMPORTANT: bucket name should be a UNIQUE bucket name (NOT the domain)
-  # Example: cloudwithzarapalevani-site
   name          = var.bucket_name
   location      = var.location
   force_destroy = true
@@ -65,30 +38,6 @@ resource "google_storage_bucket_iam_member" "public_read" {
 }
 
 ########################################
-# Upload site files to the bucket
-########################################
-
-resource "google_storage_bucket_object" "site_files" {
-  for_each = { for f in local.files : f => f }
-
-  name   = each.value
-  bucket = google_storage_bucket.site.name
-  source = "${local.site_dir}/${each.value}"
-
-  content_type = lookup(
-    local.mime_types,
-    regex("\\.[^.]+$", each.value),
-    "application/octet-stream"
-  )
-
-  cache_control = (
-    endswith(each.value, ".html")
-    ? "no-cache"
-    : "public, max-age=86400"
-  )
-}
-
-########################################
 # Cloudflare DNS
 ########################################
 
@@ -96,7 +45,6 @@ data "cloudflare_zone" "zone" {
   name = var.cloudflare_zone_name
 }
 
-# Apex record: cloudwithzarapalevani.site -> bucket endpoint
 resource "cloudflare_record" "apex" {
   zone_id = data.cloudflare_zone.zone.id
   name    = "@"
@@ -104,11 +52,9 @@ resource "cloudflare_record" "apex" {
   content = "${var.bucket_name}.storage.googleapis.com"
   proxied = true
   ttl     = 1
-
   allow_overwrite = true
 }
 
-# www record: www.cloudwithzarapalevani.site -> bucket endpoint
 resource "cloudflare_record" "www" {
   zone_id = data.cloudflare_zone.zone.id
   name    = "www"
@@ -116,6 +62,5 @@ resource "cloudflare_record" "www" {
   content = "${var.bucket_name}.storage.googleapis.com"
   proxied = true
   ttl     = 1
-
   allow_overwrite = true
 }
