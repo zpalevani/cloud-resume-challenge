@@ -7,7 +7,7 @@ provider "google" {
 }
 
 provider "cloudflare" {
-  # Token is picked up from CLOUDFLARE_API_TOKEN env var
+  # Token is picked up from CLOUDFLARE_API_TOKEN env var (in Terraform Cloud env vars)
 }
 
 ########################################
@@ -15,7 +15,9 @@ provider "cloudflare" {
 ########################################
 
 locals {
-  site_dir = "${path.module}/../site"
+  # IMPORTANT for Terraform Cloud remote runs:
+  # Use repo-root based path, not path.module relative traversal
+  site_dir = "${path.root}/GCP/site"
   files    = fileset(local.site_dir, "**")
 
   mime_types = {
@@ -103,7 +105,6 @@ resource "cloudflare_record" "apex" {
   proxied = true
   ttl     = 1
 
-  # Optional, but helps if a record already exists
   allow_overwrite = true
 }
 
@@ -116,6 +117,5 @@ resource "cloudflare_record" "www" {
   proxied = true
   ttl     = 1
 
-  # ✅ This is the fix for your “already exists” error
   allow_overwrite = true
 }
