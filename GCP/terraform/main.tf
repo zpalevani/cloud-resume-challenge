@@ -3,7 +3,8 @@
 ########################################
 
 provider "google" {
-  project = var.project_id
+  project     = var.project_id
+  credentials = var.gcp_credentials_json
 }
 
 provider "cloudflare" {
@@ -52,6 +53,7 @@ resource "cloudflare_record" "apex" {
   content = "${var.bucket_name}.storage.googleapis.com"
   proxied = true
   ttl     = 1
+
   allow_overwrite = true
 }
 
@@ -62,5 +64,6 @@ resource "cloudflare_record" "www" {
   content = "${var.bucket_name}.storage.googleapis.com"
   proxied = true
   ttl     = 1
+
   allow_overwrite = true
 }
