@@ -18,6 +18,13 @@ variable "bucket_name" {
   description = "Unique GCS bucket name (NOT the domain name)"
 }
 
+# GCP service account credentials (Terraform Cloud)
+variable "gcp_credentials_json" {
+  description = "GCP service account key JSON (stored as a sensitive Terraform Cloud variable)"
+  type        = string
+  sensitive   = true
+}
+
 ########################################
 # Cloudflare
 ########################################
