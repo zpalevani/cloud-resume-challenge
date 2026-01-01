@@ -1103,10 +1103,15 @@ The backend needed to be boring, predictable, and defensible in an interview.
 
 ```mermaid
 flowchart LR
-  A[Browser / Frontend JS] -->|GET /count| B[API Gateway]
-  B --> C[Cloud Function Gen 2]
-  C -->|transaction| D[(Firestore)]
-  C -->|JSON {count}| B
+  A[Browser / Frontend JS]
+  B[API Gateway]
+  C[Cloud Function Gen 2]
+  D[(Firestore)]
+
+  A -->|GET /count| B
+  B --> C
+  C -->|transaction| D
+  C -->|JSON count| B
   B -->|JSON response| A
 ```
 
@@ -1419,3 +1424,5 @@ If I were scaling this beyond a resume project, the next steps would be:
 None of those were required to complete the challenge correctly.
 
 This backend does exactly what it should, nothing more.
+  
+![GCP Backend Architecture](GCP/gcp-backend-complete.png)
