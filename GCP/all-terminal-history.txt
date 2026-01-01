@@ -1,0 +1,71 @@
+    1  vim ~/.bashrc
+    2  vi ~/. bash .bash_logout .bashhrc
+    3  vi ~/. 
+    4  cd GCP
+    5  vib ~/.
+    6  vib ~\.
+    7  env | grep GOOGLE
+    8  vi ~/, 
+    9  sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
+   10  wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
+   11  gpg --no-default-keyring --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg --fingerprint
+   12  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+   13  sudo apt update
+   14  sudo apt-get install terraform
+   15  terraform -help
+   16  terraform plan -help
+   17  cd gcp
+   18  terraform --version
+   19  cd gcp/p
+   20  cd gcp
+   21  cd GCP
+   22  export GOOGLE_APPLICATION_CREDENTIALS={{path}}
+   23  vi ~/.
+   24  rm ~/.bashrc.swp
+   25  source ~/.bashrc
+   26  echo $GOOGLE_APPLICATION_CREDENTIALS
+   27  grep -n 'xport' ~/.bashrc
+   28  vim ~/.bashrc
+   29  source ~/.bashrc
+   30  echo $GOOGLE_APPLICATION_CREDENTIALS
+   31  vim ~/.bashrc
+   32  :162
+   33  source ~/.bashrc
+   34  vim ~/.bashrc
+   35  source ~/.bashrc
+   36  grep -n '^xport ' ~/.bashrc
+   37  echo $GOOGLE_APPLICATION_CREDENTIALS
+   38  git init
+   39  git status
+   40  git add . 
+   41  git commit -m "update domain terraform file and persist file in bash"
+   42  git push
+   43  pipx install --include-deps ansible
+   44  vaults/deploy.yml → vaults/prod.yml
+   45  source ~/.bashrc
+   46  echo $GOOGLE_APPLICATION_CREDENTIALS
+   47  vim ~/.bashrc
+   48  gsutil cp /workspaces/cloud-resume-challenge/GCP/site/blog/index.html gs://cloudwithzarapalevani-site/blog/index.html
+   49  gsutil -h "Cache-Control:no-store" cp /workspaces/cloud-resume-challenge/GCP/site/blog/index.html gs://cloudwithzarapalevani-site/blog/index.html
+   50  https://cloudwithzarapalevani-site.storage.googleapis.com/blog/index.html
+   51  gsutil web get gs://cloudwithzarapalevani-site
+   52  gsutil -m rsync -r -d GCP/site gs://cloudwithzarapalevani-site
+   53  gsutil cp GCP/site/blog/index.html gs://cloudwithzarapalevani-site/blog/index.html
+   54  gsutil -m rsync -r GCP/site gs://cloudwithzarapalevani-site
+   55  git status
+   56  git add .
+   57  git commit -m"complete backend and update readme"
+   58  git push
+   59  git status
+   60  git add .
+   61  git commit -m"update readme"
+   62  git push
+   63  ls GCP | grep backend
+   64  mv "wrong-name.png" gcp-backend-complete.png
+   65  git push
+   66  ls -l GCP | sed -n '1,20p'
+   67  git status
+   68  git add GCP/gcp-backend-complete.png GCP/README.md
+   69  git commit -m "Add GCP backend architecture diagram to README"
+   70  git push
+   71  history > GCP/all-terminal-history.txt
