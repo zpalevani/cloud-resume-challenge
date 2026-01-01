@@ -1425,4 +1425,9 @@ None of those were required to complete the challenge correctly.
 
 This backend does exactly what it should, nothing more.
   
-![GCP Backend Architecture](GCP/gcp-backend-complete.png)
+<h2>GCP Backend – Complete Architecture</h2>
+
+<img src="gcp-backend-complete.png" alt="GCP Backend Architecture" width="900">
+
+
+
