@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@0..1&wght@200..700&GRAD@-25..200&opsz@20..48" rel="stylesheet">
 
-  <!-- ✅ Correct absolute asset paths -->
+  <!-- Assets -->
   <link rel="stylesheet" href="/assets/css/styles.css" />
   <script defer src="/assets/js/main.js"></script>
 </head>
@@ -26,7 +26,7 @@
 
     <nav class="appbar__nav" aria-label="Primary">
       <a class="navlink" href="/">Home</a>
-      <a class="navlink" href="/blog/">Blog</a>
+      <a class="navlink" href="/blog/index.html">Blog</a>
     </nav>
   </header>
 
@@ -41,7 +41,7 @@
 
         <h1>Zara Palevani</h1>
         <p class="subtitle">
-          Director, Customer Success &amp; Sales Ops· Merkle | Cardinal Path (dentsu)<br />
+          Director, Customer Success &amp; Sales Ops · Merkle | Cardinal Path (dentsu)<br />
           Building an IaC-first cloud portfolio with real infrastructure, real CI/CD, and real tradeoffs.
         </p>
 
@@ -50,7 +50,7 @@
             <span class="material-symbols-rounded">description</span>
             View Resume
           </a>
-          <a class="btn btn--ghost" href="/blog/">
+          <a class="btn btn--ghost" href="/blog/index.html">
             <span class="material-symbols-rounded">article</span>
             Read Blog
           </a>
@@ -60,7 +60,7 @@
           <div class="metric">
             <div class="metric__label">Visitor Counter</div>
             <div class="metric__value" id="visitorCount">—</div>
-            <div class="metric__hint">Backend wiring in Phase 2</div>
+            <div class="metric__hint">Serverless · Cloud Run · Firestore</div>
           </div>
 
           <div class="metric">
@@ -72,11 +72,9 @@
       </div>
 
       <div class="hero__media">
-        <!-- ✅ Correct absolute image path -->
         <img class="avatar" src="/assets/img/profile.png" alt="Portrait photo of Zara Palevani" />
       </div>
 
-      <!-- Links moved here: bottom of the HERO section, horizontal -->
       <div class="pillrow">
         <a class="pill" href="https://github.com/zpalevani" target="_blank" rel="noreferrer">GitHub</a>
         <a class="pill" href="https://www.linkedin.com/in/zara-palevani/" target="_blank" rel="noreferrer">LinkedIn</a>
@@ -89,58 +87,28 @@
       <div class="section__header">
         <h2>Resume</h2>
         <p class="muted">
-          This site is intentionally static and fast. The “cloud” part is everything behind it: storage, DNS, HTTPS, IaC, CI/CD, and the visitor counter API.
+          This site is intentionally static and fast. The “cloud” part is everything behind it:
+          storage, DNS, HTTPS, IaC, CI/CD, and a serverless visitor counter.
         </p>
       </div>
 
       <div class="grid grid--2">
         <article class="card">
-          <h3>
-            <span class="material-symbols-rounded">work</span>
-            Experience Highlights
-          </h3>
+          <h3><span class="material-symbols-rounded">work</span> Experience Highlights</h3>
           <ul class="list">
             <li>Director, Customer Success &amp; Sales Operations (Merkle | Cardinal Path)</li>
-            <li>Executive oversight of large enterprise/public-sector client portfolio</li>
-            <li>Operating model design: delivery governance, renewals, capacity planning, GTM enablement</li>
-            <li>Analytics + cloud modernization: measurement strategy, data pipelines, activation workflows</li>
+            <li>Executive oversight of enterprise and public-sector clients</li>
+            <li>Operating model design: renewals, delivery governance, GTM enablement</li>
           </ul>
         </article>
 
         <article class="card">
-          <h3>
-            <span class="material-symbols-rounded">school</span>
-            Skills &amp; Certifications
-          </h3>
+          <h3><span class="material-symbols-rounded">school</span> Skills &amp; Certifications</h3>
           <ul class="list">
-            <li>Cloud fundamentals: IAM, networking basics, storage, serverless patterns</li>
-            <li>IaC mindset: Terraform-first, repeatable environments, minimal console clicks</li>
-            <li>CI/CD: GitHub Actions pipelines for infra + deploy</li>
-            <li>AWS Cloud Practitioner (plus ongoing GCP/Azure learning)</li>
+            <li>IaC-first mindset (Terraform)</li>
+            <li>Serverless patterns (Cloud Run, Firestore)</li>
+            <li>CI/CD via GitHub Actions</li>
           </ul>
-        </article>
-      </div>
-
-      <div class="grid grid--3">
-        <article class="card">
-          <h3><span class="material-symbols-rounded">build</span> What I’m building</h3>
-          <p class="muted">
-            A GCP-hosted static resume with a serverless visitor counter and automated deployment.
-          </p>
-        </article>
-
-        <article class="card">
-          <h3><span class="material-symbols-rounded">account_tree</span> Architecture (high level)</h3>
-          <p class="muted">
-            Cloud Storage (static site) → Cloudflare (DNS/CDN/SSL edge) → later: API Gateway + Cloud Function + Firestore.
-          </p>
-        </article>
-
-        <article class="card">
-          <h3><span class="material-symbols-rounded">payments</span> Cost control</h3>
-          <p class="muted">
-            Designed to avoid surprises. Anything with steady monthly cost (like load balancers) gets called out before we create it.
-          </p>
         </article>
       </div>
     </section>
@@ -150,40 +118,28 @@
       <div class="section__header section__header--row">
         <div>
           <h2>Blog</h2>
-          <p class="muted">Three short posts documenting what I built and why it matters.</p>
+          <p class="muted">Short posts documenting what I built and why.</p>
         </div>
-        <a class="btn btn--ghost" href="/blog/">
+        <a class="btn btn--ghost" href="/blog/index.html">
           <span class="material-symbols-rounded">arrow_forward</span>
           View all
         </a>
       </div>
 
       <div class="grid grid--3">
-        <a class="card card--link" href="/blog/">
+        <a class="card card--link" href="/blog/index.html">
           <h3>1) Why IaC-first matters</h3>
-          <p class="muted">Console clicks don’t scale. IaC gives repeatability, review, and confidence.</p>
-          <div class="linkhint">
-            Read post
-            <span class="material-symbols-rounded">arrow_forward</span>
-          </div>
+          <p class="muted">Repeatability beats console clicks.</p>
         </a>
 
-        <a class="card card--link" href="/blog/">
-          <h3>2) Static doesn’t mean “simple”</h3>
-          <p class="muted">DNS, HTTPS, caching, and security tradeoffs are the real learning.</p>
-          <div class="linkhint">
-            Read post
-            <span class="material-symbols-rounded">arrow_forward</span>
-          </div>
+        <a class="card card--link" href="/blog/index.html">
+          <h3>2) Static doesn’t mean easy</h3>
+          <p class="muted">DNS, HTTPS, caching are the real work.</p>
         </a>
 
-        <a class="card card--link" href="/blog/">
-          <h3>3) The visitor counter architecture</h3>
-          <p class="muted">A tiny API, a tiny database, and a big lesson in reliability and CORS.</p>
-          <div class="linkhint">
-            Read post
-            <span class="material-symbols-rounded">arrow_forward</span>
-          </div>
+        <a class="card card--link" href="/blog/index.html">
+          <h3>3) Visitor counter architecture</h3>
+          <p class="muted">Tiny feature, real backend decisions.</p>
         </a>
       </div>
     </section>
@@ -192,7 +148,7 @@
       <div class="footer__inner">
         <span>© <span id="year"></span> Zara Palevani</span>
         <span class="dot">•</span>
-        <span class="muted">Built for the Cloud Resume Challenge (GCP)</span>
+        <span class="muted">Cloud Resume Challenge (GCP)</span>
       </div>
     </footer>
   </main>

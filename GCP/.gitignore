@@ -1,6 +1,28 @@
-# Terraform
 *.tfstate
-*.tfstate.backup
+*.tfstate.*
 .terraform/
+.terraform.lock.hcl
 gcp-key.json
-vaults/*.json
+# Terraform
+**/.terraform/
+**/.terraform.lock.hcl
+**/*.tfstate
+**/*.tfstate.*
+**/crash.log
+**/crash.*.log
+
+# Secrets / keys
+**/gcp-key.json
+**/*.pem
+**/*.p12
+**/.env
+**/.env.*
+
+# Node / Python
+**/node_modules/
+**/__pycache__/
+**/*.pyc
+
+# OS/editor
+.DS_Store
+.vscode/

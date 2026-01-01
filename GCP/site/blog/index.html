@@ -4,14 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Zara Palevani | Blog</title>
-  <meta name="description" content="Blog posts for the Cloud Resume Challenge (GCP)." />
+  <meta name="description" content="Cloud Resume Challenge blog — frontend, Cloudflare, and backend architecture decisions." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@0..1&wght@200..700&GRAD@-25..200&opsz@20..48" rel="stylesheet">
 
-  <!-- ✅ Correct absolute asset paths -->
   <link rel="stylesheet" href="/assets/css/styles.css" />
   <script defer src="/assets/js/main.js"></script>
 </head>
@@ -24,7 +23,7 @@
 
     <nav class="appbar__nav" aria-label="Primary">
       <a class="navlink" href="/">Home</a>
-      <a class="navlink navlink--active" href="/blog/">Blog</a>
+      <a class="navlink navlink--active" href="/blog/index.html">Blog</a>
     </nav>
   </header>
 
@@ -33,95 +32,147 @@
       <div class="section__header">
         <h1 class="pageTitle">Blog</h1>
         <p class="muted">
-          Short, practical write-ups. No fluff. Focused on what I built, the tradeoffs, and what I’d do differently next time.
+          Short, practical write-ups. No tutorials. No fluff.  
+          Just what I built, why I made certain decisions, and what I learned.
         </p>
       </div>
 
       <div class="stack">
+
+        <!-- POST 1 -->
         <article class="card post">
           <div class="post__meta">
             <span class="tag">
-              <span class="material-symbols-rounded">build</span>
-              IaC
+              <span class="material-symbols-rounded">web</span>
+              Frontend
             </span>
-            <span class="muted">~3 min read</span>
           </div>
 
-          <h2>1) Why IaC-first matters (even for “simple” sites)</h2>
+          <h2>1) Building the frontend first (on purpose)</h2>
 
           <p class="muted">
-            Cloud projects fail in boring ways: missing steps, inconsistent environments, and “it worked yesterday.”
-            IaC fixes that by making infrastructure repeatable, reviewable, and version-controlled.
+            I started this project by treating the frontend as a finished product — not a placeholder.
           </p>
 
           <div class="post__body">
+            <p>
+              The site is intentionally static. HTML, CSS, and a small amount of JavaScript.
+              No frameworks, no build step, no client-side complexity hiding the real work.
+            </p>
+
+            <p>This forced clarity early:</p>
+
             <ul class="list">
-              <li>Every change becomes a commit with history</li>
-              <li>Setup becomes predictable and teachable</li>
-              <li>You can rebuild from zero without panic</li>
+              <li>What data actually needs to exist?</li>
+              <li>What should be static vs dynamic?</li>
+              <li>What contracts does the backend need to satisfy?</li>
             </ul>
 
-            <p class="muted">
-              For this project, I’m treating the static website like a production system: code-defined resources, automated deploys, and explicit cost awareness.
+            <p>
+              By wiring the visitor counter placeholder into the UI before the backend existed,
+              I locked in the API shape early. That eliminated guesswork later.
+            </p>
+
+            <p>
+              Frontend-first wasn’t about visuals. It was about defining interfaces,
+              constraints, and expectations — the same way I approach real systems.
             </p>
           </div>
         </article>
 
+        <!-- POST 2 -->
         <article class="card post">
           <div class="post__meta">
             <span class="tag">
               <span class="material-symbols-rounded">public</span>
-              Web
+              Cloudflare
             </span>
-            <span class="muted">~4 min read</span>
           </div>
 
-          <h2>2) Static doesn’t mean “easy”: DNS, HTTPS, and caching</h2>
+          <h2>2) Moving to Cloudflare: DNS, HTTPS, and reality</h2>
 
           <p class="muted">
-            The hard part isn’t writing HTML. The hard part is making your site reachable, fast, and secure—under your own domain.
+            Static hosting is easy. Owning your domain, HTTPS, and routing is not.
           </p>
 
           <div class="post__body">
+            <p>
+              Cloudflare sits between users and Google Cloud Storage.
+              That sounds simple until you actually deal with:
+            </p>
+
             <ul class="list">
-              <li>DNS can be simple until it isn’t (records, TTLs, propagation)</li>
-              <li>HTTPS is non-negotiable for credibility</li>
-              <li>CDNs help performance—and can hide mistakes if you don’t understand caching</li>
+              <li>apex vs www redirects</li>
+              <li>directory-style URLs like <code>/blog/</code></li>
+              <li>caching behavior masking deployment mistakes</li>
             </ul>
 
-            <p class="muted">
-              I’m using Cloudflare for CDN/DNS to control cost and keep performance strong. The goal is still the same: understand what’s happening at the edge.
+            <p>
+              I deliberately chose Cloudflare to control cost and avoid
+              always-on GCP load balancers.
+              That decision came with tradeoffs — especially around redirects.
+            </p>
+
+            <p>
+              Fixing <code>/blog</code> vs <code>/blog/index.html</code>
+              forced me to understand how Cloudflare evaluates rules,
+              ordering, and redirect loops.
+            </p>
+
+            <p>
+              This wasn’t about “making it work.”
+              It was about understanding the edge well enough
+              to debug it without guessing.
             </p>
           </div>
         </article>
 
+        <!-- POST 3 -->
         <article class="card post">
           <div class="post__meta">
             <span class="tag">
               <span class="material-symbols-rounded">swap_horiz</span>
-              API
+              Backend
             </span>
-            <span class="muted">~5 min read</span>
           </div>
 
-          <h2>3) Visitor counter: tiny feature, real architecture</h2>
+          <h2>3) The visitor counter: small feature, real backend decisions</h2>
 
           <p class="muted">
-            A counter looks trivial, but it forces real backend thinking: data storage, an API boundary, auth, CORS, and deployment.
+            A visitor counter sounds trivial — until you build it properly.
           </p>
 
           <div class="post__body">
+            <p>
+              I implemented the backend using Cloud Run and Firestore,
+              provisioned via Terraform and deployed as a container.
+            </p>
+
+            <p>The design was intentional:</p>
+
             <ul class="list">
-              <li>Frontend calls an API endpoint (not the database directly)</li>
-              <li>API updates a database value</li>
-              <li>Deployment is automated with tests</li>
+              <li>Browser calls an API, not the database</li>
+              <li>Firestore access scoped via a service account</li>
+              <li>CORS locked to my domain</li>
+              <li>Scale-to-zero to avoid idle cost</li>
             </ul>
 
-            <p class="muted">
-              Next phase: Firestore + Cloud Function (or Cloud Run) + API Gateway, provisioned via Terraform, deployed via GitHub Actions.
+            <p>
+              Most of the effort wasn’t writing Python.
+              It was aligning IAM, container images, regions,
+              and environment variables so everything behaved predictably.
             </p>
+
+            <p>
+              This is where Infrastructure as Code mattered most.
+              Every fix became a commit. Every change was reversible.
+              No mystery state.
+            </p>
+
+            <p>The result is intentionally boring — and that’s the point.</p>
           </div>
         </article>
+
       </div>
     </section>
 

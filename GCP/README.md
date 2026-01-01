@@ -828,3 +828,594 @@ echo "${#CLOUDFLARE_API_TOKEN}"
 This phase closed with a fully working, cost-safe, IaC-driven static frontend.
 
 ![ZP Frontend GCP](zp%20frontend%20gcp.png)
+
+# December 30, 2025
+
+Today's focus is to complete the backend. But before that I am working on stabilizing my terraform state. 
+
+# GCP Cloud Resume Challenge – Infrastructure Journal
+
+## Context & Goal
+
+This phase of my Cloud Resume Challenge focused on **stabilizing and hardening my GCP-based static website infrastructure**, while migrating Terraform state to **Terraform Cloud (HCP Terraform)** and integrating **Cloudflare DNS** cleanly. The goal was not just to “make it work”, but to reach a **production-grade, resume‑worthy setup** with proper state management, secrets handling, and reproducibility.
+
+---
+
+## Initial State
+
+* Static website hosted on **Google Cloud Storage (GCS)**
+* DNS managed via **Cloudflare**
+* Infrastructure defined using **Terraform (local state)**
+* Site content stored under `GCP/site/`
+* Terraform code under `GCP/terraform/`
+
+This setup worked, but it was **not safe or scalable**:
+
+* Local Terraform state = fragile
+* Credential handling inconsistent
+* Manual fixes creeping in
+
+Decision: **migrate to Terraform Cloud and lock this down properly**.
+
+---
+
+## Decision 1: Terraform Cloud for Remote State
+
+### Why
+
+* Single source of truth for state
+* No local `.tfstate` risk
+* Resume‑aligned (this is how teams do it)
+
+### Implementation
+
+* Created Terraform Cloud organization: `zarapalevani-org`
+* Created workspace: `gcs-zaracloudresume-gcp`
+* Added Terraform Cloud block to configuration
+
+```hcl
+terraform {
+  cloud {
+    organization = "zarapalevani-org"
+    workspaces {
+      name = "gcs-zaracloudresume-gcp"
+    }
+  }
+}
+```
+
+* Logged in via:
+
+```bash
+terraform login
+terraform init -upgrade
+```
+
+* Migrated existing local state into Terraform Cloud
+
+Outcome: **Terraform state fully remote and stable**.
+
+---
+
+## Decision 2: Provider Version Alignment
+
+### Problem Encountered
+
+Terraform failed during init due to provider version lock mismatch:
+
+* Locked Google provider v5.x
+* Config requested v6.x
+
+### Fix
+
+Ran:
+
+```bash
+terraform init -upgrade
+```
+
+Committed updated `.terraform.lock.hcl` to GitHub.
+
+Outcome: **Providers aligned and reproducible**.
+
+---
+
+## Decision 3: Credentials Strategy (Key Design Choice)
+
+This was the hardest and most important part.
+
+### Constraint
+
+* Terraform Cloud **environment variables do NOT support multiline JSON**
+* GCP service account keys are multiline JSON
+
+### Options Considered
+
+1. `GOOGLE_APPLICATION_CREDENTIALS` file path
+2. Base64 encoding JSON
+3. Terraform variable with `credentials = var.xxx`
+
+### Final Decision (Intentional)
+
+I **kept BOTH credential paths** deliberately:
+
+* `gcp_credentials_json` → Terraform Variable (Sensitive)
+* `GOOGLE_CREDENTIALS` → Environment Variable (Sensitive)
+
+Why:
+
+* Terraform explicitly uses `credentials = var.gcp_credentials_json`
+* `GOOGLE_CREDENTIALS` acts as a fallback / compatibility layer
+* This avoids brittle failures during refactors or tooling changes
+
+This is **intentional redundancy**, not confusion.
+
+---
+
+## Code Change: Google Provider
+
+```hcl
+provider "google" {
+  project     = var.project_id
+  credentials = var.gcp_credentials_json
+}
+```
+
+And declared explicitly in `variables.tf`:
+
+```hcl
+variable "gcp_credentials_json" {
+  description = "GCP service account key JSON"
+  type        = string
+  sensitive   = true
+}
+```
+
+Outcome: **Terraform Cloud can authenticate deterministically**.
+
+---
+
+## Decision 4: Cloudflare DNS via Terraform
+
+### Records Managed
+
+* Apex (`@`) → GCS bucket endpoint
+* `www` → GCS bucket endpoint
+
+```hcl
+resource "cloudflare_record" "apex" {
+  zone_id = data.cloudflare_zone.zone.id
+  name    = "@"
+  type    = "CNAME"
+  content = "${var.bucket_name}.storage.googleapis.com"
+  proxied = true
+  ttl     = 1
+  allow_overwrite = true
+}
+```
+
+Same for `www`.
+
+Key choice:
+
+* `allow_overwrite = true` to avoid manual DNS drift
+
+Outcome: **DNS fully IaC‑managed**.
+
+---
+
+## Decision 5: Site Content Deployment (Out-of-Band)
+
+Terraform is **not responsible for content sync**.
+That was a deliberate choice.
+
+### Why
+
+* Terraform should manage infra, not assets
+* Avoid unnecessary diffs & slow applies
+
+### Deployment Method
+
+Installed Google Cloud SDK inside Codespaces and used:
+
+```bash
+gcloud auth login --no-launch-browser
+gcloud config set project cloud-resume-challenge-479115
+
+gsutil -m rsync -r ../site gs://cloudwithzarapalevani-site
+```
+
+Verified with:
+
+```bash
+gsutil ls gs://cloudwithzarapalevani-site/**
+```
+
+Outcome: **Clean, explicit content deployment**.
+
+---
+
+## Final State Verification
+
+### Terraform
+
+```bash
+terraform plan
+terraform apply
+```
+
+Result:
+
+* No changes
+* Infrastructure matches configuration
+
+### Bucket
+
+* `index.html`, `404.html`, `assets/`, `blog/` present
+
+### DNS
+
+* `https://cloudwithzarapalevani.site`
+* `https://www.cloudwithzarapalevani.site`
+
+Cloudflare cache purged once to ensure freshness.
+
+---
+
+## Key Learnings
+
+* Terraform Cloud variable scoping **matters**
+* Multiline secrets ≠ environment variables
+* Redundancy can be a **deliberate stability choice**
+* Remote state changes the entire operational mindset
+
+This phase moved the project from *“working”* to *“defensible, explainable, and professional”*.
+
+---
+
+## Status
+
+✅ Infrastructure stable
+✅ State remote
+✅ DNS automated
+✅ Content deployed
+
+
+# Dec 31, 2025
+
+# Backend Implementation – Technical Journal
+
+## Context
+
+The goal of the backend was simple and non-negotiable:
+
+* A serverless API endpoint
+* A persistent counter
+* Infrastructure defined via Terraform
+* No manual drift
+* Safe separation between infrastructure and application code
+
+The backend needed to be boring, predictable, and defensible in an interview.
+
+---
+
+## Target Architecture
+
+```mermaid
+flowchart LR
+  A[Browser / Frontend JS] -->|GET /count| B[API Gateway]
+  B --> C[Cloud Function Gen 2]
+  C -->|transaction| D[(Firestore)]
+  C -->|JSON {count}| B
+  B -->|JSON response| A
+```
+
+**Request flow**:
+
+Browser → API Gateway → Cloud Function (Gen 2) → Firestore → Response
+
+**Key design constraints**:
+
+* No direct public access to the database
+* No credentials embedded in frontend
+* Minimum IAM surface area
+* Terraform owns infra, not deployments
+* Backend stays simple, observable, and easy to reason about
+
+---
+
+## Repo Structure
+
+This is the folder structure I ended up with for the GCP implementation (frontend + backend + IaC). It matters because it keeps concerns separated: site assets stay clean, Terraform stays isolated, and backend code can evolve without breaking state.
+
+```text
+GCP/
+├── backend/
+│   ├── (function source + deployment artifacts)
+│   ├── ERROR
+│   └── transferring
+├── site/
+│   ├── index.html
+│   ├── 404.html
+│   ├── blog/
+│   │   └── index.html
+│   └── assets/
+│       ├── css/
+│       │   └── styles.css
+│       ├── img/
+│       │   └── profile.png
+│       └── js/
+│           └── main.js
+└── terraform/
+    ├── main.tf
+    ├── variables.tf
+    ├── outputs.tf
+    ├── versions.tf
+    ├── backend.tf
+    ├── artifact_registry.tf
+    ├── gcp-key.json
+    ├── terraform.tfvars
+    ├── terraform.tfvars.example
+    ├── terraform.tfstate
+    ├── terraform.tfstate.backup
+    ├── terraform.lock.hcl
+    ├── .terraform/
+    └── .gitignore
+```
+
+**Reasoning behind this structure**:
+
+* `site/` is purely static content. No Terraform, no backend code, no secrets.
+* `backend/` is the function code. It can be packaged/deployed independently.
+* `terraform/` is infrastructure only. It contains state, providers, and resource definitions.
+* `gcp-key.json` exists locally for Terraform auth but is excluded from Git by design.
+
+---
+
+## Terminal Commands I Used
+
+These are the commands that actually moved the work forward and/or were used to debug. I’m documenting them because they’re part of the engineering story.
+
+### Terraform workflow
+
+```bash
+# Move into the infra directory
+cd GCP/terraform
+
+# Initialize providers + modules
+terraform init
+
+# Check what Terraform plans to change
+terraform plan
+
+# Apply changes to create/update infra
+terraform apply
+```
+
+### Inspecting Terraform state during debugging
+
+```bash
+# Confirm the exact DNS record Terraform created in Cloudflare
+terraform state show cloudflare_record.apex
+```
+
+### Local frontend sanity check
+
+```bash
+# Serve the static site locally to validate paths/assets
+cd GCP/site
+python -m http.server 8080
+```
+
+### Git sanity checks
+
+```bash
+# Confirm recent commits
+git log --oneline -5
+```
+
+> If there were other commands I ran in the moment (like `terraform fmt`, `terraform validate`, `curl` tests), they follow the same principle: keep changes explicit, validate before apply, and test each layer separately.
+
+---
+
+## Stack Summary and Why I Chose It
+
+| Layer           | Choice                                 | Why it makes sense here                                                                      |
+| --------------- | -------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Static frontend | GCS website hosting (+ Cloudflare DNS) | Cheap, simple, and stable. Frontend doesn’t need a server.                                   |
+| API Layer       | API Gateway                            | Clean public endpoint, decouples client from function, future-proofing for auth/rate limits. |
+| Compute         | Cloud Functions Gen 2                  | Serverless HTTP handler with modern GCP runtime model. Easy deploy + scale-to-zero.          |
+| Data            | Firestore                              | Serverless persistence with transactions for atomic increments. No DB ops overhead.          |
+| IaC             | Terraform                              | Repeatable infra, eliminates “it works on my console” drift.                                 |
+| DNS/CDN edge    | Cloudflare                             | Fast DNS, control over records, and consistent zone management via Terraform.                |
+
+**The logic behind the whole stack**:
+
+* The frontend is static, so the hosting layer should be static.
+* The counter is stateful, so it needs a database (but not a server-managed one).
+* The database should never be public, so requests must go through an API.
+* The API should point to serverless compute to avoid idle cost and ops.
+* Everything should be reproducible, so Terraform owns the infrastructure.
+
+---
+
+## Backend Components
+
+**Request flow**:
+
+Browser → API Gateway → Cloud Function (Gen 2) → Firestore → Response
+
+**Key design constraints**:
+
+* No direct public access to the database
+* No credentials embedded in frontend
+* Minimum IAM surface area
+* Terraform owns infra, not deployments
+
+---
+
+## Backend Components
+
+### 1. Firestore (Native Mode)
+
+I used Firestore as the persistence layer for the visitor counter.
+
+**Why Firestore**:
+
+* Serverless
+* Strong consistency
+* Native IAM integration with Cloud Functions
+* No connection management overhead
+
+**Design**:
+
+* Collection: `counters`
+* Document ID: `resume`
+* Field: `count` (integer)
+
+Firestore is never accessed directly from the frontend. All reads/writes go through the Cloud Function.
+
+---
+
+### 2. Cloud Function – Gen 2
+
+The function is responsible for:
+
+* Receiving HTTP requests
+* Incrementing the counter atomically
+* Returning the updated count as JSON
+
+**Key decisions**:
+
+* Gen 2 was chosen over Gen 1 to align with current GCP direction
+* Runtime kept minimal (Node.js)
+* Function logic is intentionally small to reduce blast radius
+
+**Atomic update**:
+
+* Firestore transaction is used
+* Prevents race conditions under concurrent traffic
+
+---
+
+### 3. API Gateway
+
+API Gateway provides:
+
+* A stable public HTTPS endpoint
+* A clean separation between client and function
+* Future extensibility (auth, rate limiting)
+
+**Configuration**:
+
+* OpenAPI spec defines a single `GET /count` route
+* Backend target is the Cloud Function URL
+* No auth enabled (intentionally) because this is a public counter
+
+The frontend never talks to the function directly.
+
+---
+
+## Terraform Strategy
+
+### Separation of Concerns
+
+Terraform owns:
+
+* Firestore database
+* Service accounts
+* IAM bindings
+* API Gateway
+* Cloud Function infrastructure
+
+Terraform does **not**:
+
+* Re-deploy function code on every change
+* Bundle business logic decisions
+
+This avoids tight coupling between infrastructure lifecycle and application iteration.
+
+---
+
+### State Management
+
+State is remote and protected.
+
+Key principles:
+
+* State is not stored locally
+* Credentials are excluded via `.gitignore`
+* Terraform Cloud is used to avoid accidental state loss
+
+This is non-negotiable for anything beyond toy projects.
+
+---
+
+### Service Account Design
+
+A dedicated service account is used for the Cloud Function.
+
+Permissions granted:
+
+* Firestore User (read/write only)
+* No project-wide admin roles
+
+Terraform runs under a separate deployer identity.
+
+This enforces least privilege and clean audit boundaries.
+
+---
+
+## Deployment Flow
+
+1. Package function source into a zip
+2. Terraform provisions:
+
+   * Firestore
+   * Service account
+   * Cloud Function (Gen 2)
+   * API Gateway
+3. API Gateway routes traffic to function
+4. Frontend calls API Gateway endpoint
+
+No manual console edits after initial setup.
+
+---
+
+## Validation
+
+I validated the backend in three layers:
+
+1. **Direct function test** via curl
+2. **API Gateway endpoint** response
+3. **Frontend integration** rendering live counter
+
+Failures at any layer were treated as infrastructure bugs, not frontend issues.
+
+---
+
+## What This Demonstrates
+
+This backend is intentionally simple, but it demonstrates:
+
+* Understanding of GCP serverless primitives
+* Proper IAM separation
+* Infrastructure-as-Code discipline
+* Clean request boundaries
+* Awareness of operational risk
+
+The backend is not impressive because it is complex. It is solid because it is controlled.
+
+---
+
+## Final Notes
+
+If I were scaling this beyond a resume project, the next steps would be:
+
+* Add request logging and metrics
+* Introduce basic abuse protection
+* Version the API
+
+None of those were required to complete the challenge correctly.
+
+This backend does exactly what it should, nothing more.

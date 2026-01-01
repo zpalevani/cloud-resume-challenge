@@ -8,11 +8,11 @@ provider "google" {
 }
 
 provider "cloudflare" {
-  # Token is picked up from CLOUDFLARE_API_TOKEN (Terraform Cloud env var)
+  # Uses CLOUDFLARE_API_TOKEN from your environment
 }
 
 ########################################
-# GCS Static Website Bucket
+# GCS Static Bucket (objects only)
 ########################################
 
 resource "google_storage_bucket" "site" {
@@ -21,11 +21,6 @@ resource "google_storage_bucket" "site" {
   force_destroy = true
 
   uniform_bucket_level_access = true
-
-  website {
-    main_page_suffix = "index.html"
-    not_found_page   = "404.html"
-  }
 }
 
 ########################################
@@ -39,7 +34,27 @@ resource "google_storage_bucket_iam_member" "public_read" {
 }
 
 ########################################
-# Cloudflare DNS
+# Upload site files to the bucket
+########################################
+
+locals {
+  site_dir = "${path.module}/../site"
+  files    = fileset(local.site_dir, "**")
+}
+
+resource "google_storage_bucket_object" "site_files" {
+  for_each = { for f in local.files : f => f }
+
+  name   = each.value
+  bucket = google_storage_bucket.site.name
+  source = "${local.site_dir}/${each.value}"
+
+  # Cache assets; keep HTML no-cache for iteration
+  cache_control = startswith(each.value, "assets/") ? "public, max-age=86400" : "no-cache"
+}
+
+########################################
+# Cloudflare DNS (point to Worker)
 ########################################
 
 data "cloudflare_zone" "zone" {
@@ -50,7 +65,7 @@ resource "cloudflare_record" "apex" {
   zone_id = data.cloudflare_zone.zone.id
   name    = "@"
   type    = "CNAME"
-  content = "${var.bucket_name}.storage.googleapis.com"
+  content = var.worker_hostname
   proxied = true
   ttl     = 1
 
@@ -61,7 +76,7 @@ resource "cloudflare_record" "www" {
   zone_id = data.cloudflare_zone.zone.id
   name    = "www"
   type    = "CNAME"
-  content = "${var.bucket_name}.storage.googleapis.com"
+  content = var.worker_hostname
   proxied = true
   ttl     = 1
 

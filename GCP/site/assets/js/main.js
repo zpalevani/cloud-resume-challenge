@@ -29,24 +29,26 @@
 
   // Visitor counter (only runs if the element exists)
   const visitorCountEl = document.getElementById("visitorCount");
-  if (visitorCountEl) {
-    // If/when you wire your backend, point this to your real endpoint.
-    // This won't break the page if the endpoint isn't live yet.
-    const endpoint = "/api/visitors";
+  if (!visitorCountEl) return;
 
-    fetch(endpoint, { method: "GET" })
-      .then((r) => {
-        if (!r.ok) throw new Error(`Visitor API HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data) => {
-        // Supports either { count: 123 } or { visits: 123 }
-        const count = data?.count ?? data?.visits;
-        if (typeof count === "number") visitorCountEl.textContent = String(count);
-      })
-      .catch(() => {
-        // Keep your placeholder; don't crash UI
+  // ✅ REAL Cloud Run endpoint
+  const endpoint = "https://visitor-counter-jgrcbs6pfa-uc.a.run.app/count";
+
+  fetch(endpoint, { method: "GET", cache: "no-store" })
+    .then((r) => {
+      if (!r.ok) throw new Error(`Visitor API HTTP ${r.status}`);
+      return r.json();
+    })
+    .then((data) => {
+      const count = data?.count;
+      if (typeof count === "number") {
+        visitorCountEl.textContent = count.toLocaleString();
+      } else {
         visitorCountEl.textContent = "—";
-      });
-  }
+      }
+    })
+    .catch((err) => {
+      console.error("Visitor counter fetch failed:", err);
+      visitorCountEl.textContent = "—";
+    });
 })();

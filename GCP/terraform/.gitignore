@@ -9,3 +9,11 @@ terraform.tfvars
 
 # Secrets
 gcp-key.json
+# backend build artifacts / local env
+GCP/backend/function/.env
+GCP/backend/function/node_modules/
+GCP/backend/function/dist/
+GCP/backend/terraform/*.tfstate
+GCP/backend/terraform/*.tfstate.*
+GCP/backend/terraform/.terraform/
+GCP/backend/terraform/.terraform.lock.hcl
