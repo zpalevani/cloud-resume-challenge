@@ -1,0 +1,33 @@
+# Secrets / env
+.env
+*.env
+*.secrets.*
+**/secrets.*
+**/*key*.json
+**/*.pfx
+**/*.pem
+**/*.key
+
+# Azure / tooling caches
+.azure/
+.azd/
+**/.terraform/
+**/*.tfstate*
+**/.DS_Store
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/.venv/
+**/venv/
+**/.pytest_cache/
+
+# Azure Functions local settings + build artifacts
+**/local.settings.json
+**/.python_packages/
+**/bin/
+**/obj/
+**/*.zip
+
+# Ansible
+*.retry
