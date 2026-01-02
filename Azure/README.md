@@ -325,3 +325,279 @@ The next phase will introduce:
 
 This frontend foundation is now stable, automated, and ready for backend integration.
 
+# Jan 2, 2026
+
+I continued the day to make the actual domain work. 
+
+**Result:** ✅ Frontend is live at [https://cloudwithzarapalevani.space](https://cloudwithzarapalevani.space) using Azure Front Door + Azure DNS
+
+This journal documents *exactly* what was done, where I went wrong initially, how I debugged it, and the precise steps that resolved the issue. This is written as a real technical log, not a cleaned-up success story.
+
+---
+
+## 1. Initial Goal
+
+Launch the **Azure Cloud Resume Challenge frontend** using:
+
+* Azure Front Door (Standard/Premium)
+* Azure Storage static website (origin)
+* Custom domain: `cloudwithzarapalevani.space`
+* HTTPS with Azure-managed certificate
+* Infrastructure-first mindset (IaC where possible, portal only when required)
+
+---
+
+## 2. Initial Architecture (Intended)
+
+```
+User
+  → cloudwithzarapalevani.space
+      → Azure Front Door
+          → Azure Storage Static Website
+```
+
+Key assumptions at the start:
+
+* Cloudflare would be used for DNS (based on prior AWS/GCP projects)
+* Azure Front Door would issue and bind the TLS certificate automatically
+
+---
+
+## 3. The Core Problem (What Was Actually Broken)
+
+### Symptom
+
+* `*.azurefd.net` endpoint worked
+* Custom domain did **not** work
+* Browser errors included:
+
+  * `NET::ERR_CERT_COMMON_NAME_INVALID`
+  * `DNS_PROBE_FINISHED_NXDOMAIN`
+
+### Misleading Signals
+
+* Azure Front Door UI showed:
+
+  * Domain: *Approved*
+  * Certificate: *Deployed*
+* Cloudflare DNS records looked correct
+
+Despite this, HTTPS **never stabilized**.
+
+---
+
+## 4. The Real Root Cause (Critical Insight)
+
+### The mistake
+
+I was managing DNS records in **Cloudflare**, but the **domain registrar (Namecheap) was NOT delegating authority to Cloudflare**.
+
+This created **split-brain DNS**:
+
+* Some resolvers hit Namecheap DNS
+* Some hit Cloudflare DNS
+* Azure Front Door could not reliably validate or bind the certificate
+
+No amount of Front Door tweaking, cache purging, or route toggling could fix this.
+
+### The key realization
+
+> **DNS record correctness does not matter if the DNS provider is not authoritative.**
+
+The fix was **not** changing records — it was changing **who controls the zone**.
+
+---
+
+## 5. The Actual Fix (What Solved Everything)
+
+### Step 1 — Delegate the domain to Azure DNS
+
+In **Namecheap → Domain → Nameservers**:
+
+Set nameservers to:
+
+```
+NS1-01.AZURE-DNS.COM
+NS2-01.AZURE-DNS.NET
+NS3-01.AZURE-DNS.ORG
+NS4-01.AZURE-DNS.INFO
+```
+
+This made **Azure DNS the single source of truth**.
+
+Verification:
+
+```bash
+whois cloudwithzarapalevani.space
+```
+
+Expected output:
+
+```
+Name Server: NS1-01.AZURE-DNS.COM
+Name Server: NS2-01.AZURE-DNS.NET
+Name Server: NS3-01.AZURE-DNS.ORG
+Name Server: NS4-01.AZURE-DNS.INFO
+```
+
+---
+
+## 6. Correct Azure DNS Records
+
+Once Azure DNS was authoritative, **all DNS had to live there**.
+
+### Apex domain record
+
+* **Type:** A
+* **Name:** (empty / `@`)
+* **IP:**
+
+  ```
+  13.107.246.40
+  ```
+
+  (Azure Front Door anycast IP)
+
+### WWW record
+
+* **Type:** CNAME
+* **Name:** `www`
+* **Target:**
+
+  ```
+  crc-afd-endpoint-bfagazhrbbfxf5dr.z02.azurefd.net
+  ```
+
+No other records were required.
+
+---
+
+## 7. DNS Verification (Source of Truth)
+
+```bash
+dig +short cloudwithzarapalevani.space
+```
+
+Expected:
+
+```
+13.107.246.40
+```
+
+```bash
+dig +short www.cloudwithzarapalevani.space
+```
+
+Expected:
+
+```
+crc-afd-endpoint-...azurefd.net
+```
+
+This confirmed DNS was **fully correct**.
+
+---
+
+## 8. TLS Certificate Debugging (Important Lesson)
+
+Azure Front Door issues certificates **asynchronously**.
+
+Even when:
+
+* DNS is correct
+* Domain is approved
+* Route is attached
+
+The cert may still serve the **default Azure cert** temporarily.
+
+### The only reliable test
+
+```bash
+echo | openssl s_client \
+-servername cloudwithzarapalevani.space \
+-connect cloudwithzarapalevani.space:443 2>/dev/null \
+| openssl x509 -noout -subject
+```
+
+### Final successful output
+
+```
+subject=CN = cloudwithzarapalevani.space
+```
+
+This was the definitive confirmation that:
+
+* TLS certificate was live
+* Front Door binding was complete
+
+Browser errors after this point were **local cache only**.
+
+---
+
+## 9. What I Learned (Key Takeaways)
+
+1. **DNS authority matters more than DNS records**
+2. Cloud platforms will happily show "green" states even when DNS is split
+3. Azure Front Door certificate lifecycle is opaque and slow
+4. `openssl` is more reliable than the Azure Portal UI
+5. Frontend issues must be fully resolved before touching backend work
+
+---
+
+## 10. Final State
+
+* ✅ Domain delegated to Azure DNS
+* ✅ Azure DNS records correct
+* ✅ Azure Front Door routing correct
+* ✅ Azure-managed TLS certificate live
+* ✅ Frontend accessible at custom domain
+
+This closed the frontend infrastructure phase of the Azure Cloud Resume Challenge.
+
+The success was short lived and the website went down again. 
+
+## The DNS & SSL Post-Mortem (The Pivot)
+The most challenging aspect of this phase was achieving a "Green Lock" (HTTPS) across both the Apex domain and the `www` subdomain.
+
+### The Problem: Split DNS Authority
+Initially, I managed records in Cloudflare while the domain was registered at Namecheap. This created a "split-brain" scenario where Azure Front Door could not reliably validate ownership. The site suffered from `DNS_PROBE_FINISHED_NXDOMAIN` and `NET::ERR_CERT_COMMON_NAME_INVALID` errors.
+
+### The Critical Realization
+Managing DNS records is irrelevant if the **DNS Authority** is not correctly delegated at the registrar level. Waiting for propagation is useless if the source of truth is fragmented.
+
+### The Solution: Consolidating to Azure DNS
+The fix required moving the entire DNS control plane to Azure.
+1.  **Delegation:** Updated the Nameservers at Namecheap to point exclusively to Azure DNS:
+    *   `ns1-01.azure-dns.com`
+    *   `ns2-01.azure-dns.net` (etc.)
+2.  **Validation:** Used the `_dnsauth` TXT record to prove ownership to the Front Door certificate authority.
+3.  **Association:** Associated both the Apex (`@`) and `www` domains to the Front Door route.
+
+**Technical Verification Commands:**
+```bash
+# Check nameserver delegation
+whois cloudwithzarapalevani.space | grep "Name Server"
+
+# Verify DNS resolution for the endpoint
+dig +short cloudwithzarapalevani.space
+
+# Interrogate the SSL handshake to ensure the correct certificate is served
+echo | openssl s_client -servername www.cloudwithzarapalevani.space -connect www.cloudwithzarapalevani.space:443 2>/dev/null | openssl x509 -noout -subject
+```
+
+---
+
+## Final Configuration State
+*   **Apex (`cloudwithzarapalevani.space`):** Resolved via an A-record (Alias) to the Front Door Anycast IP.
+*   **Subdomain (`www`):** Resolved via CNAME to the Front Door endpoint.
+*   **Redirect Logic:** Implemented a Front Door Rule Set (`redirectwwwtoapex`) to perform a 301 redirect from `www` to the Apex, ensuring a single, secure entry point.
+
+## Lessons Learned
+*   **Handshake Before Redirect:** In an HTTPS request, the SSL handshake happens *before* the redirect. Without a valid certificate for `www`, the redirect rule will never execute because the browser kills the connection first.
+*   **Platform Opaque States:** Azure Front Door may report "Succeeded" or "Deployed" in the portal while the global edge nodes are still updating. Technical validation via `curl` and `openssl` is the only true way to verify status.
+
+---
+
+**Status:** ✅ Frontend is live, secure, and fully automated. Moving to Phase 2 (Backend).
+
+<img src="zara azure.png" alt="cloudwithzara via Azure" width="900">
