@@ -1,0 +1,60 @@
+- name: Deploy Azure Frontend (Bicep) + Upload site to $web
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars_files:
+    - ../vars/azure.yml
+
+  tasks:
+    - name: Verify Azure CLI is installed
+      ansible.builtin.command: az version
+      changed_when: false
+
+    - name: Ensure az is logged in
+      ansible.builtin.command: az account show
+      changed_when: false
+
+    - name: Ensure resource group exists
+      ansible.builtin.command: >
+        az group create
+        --name {{ rg_name }}
+        --location {{ location }}
+      changed_when: true
+
+    - name: Deploy Bicep (Storage + Front Door only)
+      ansible.builtin.command: >
+        az deployment group create
+        --name {{ deployment_name }}
+        --resource-group {{ rg_name }}
+        --template-file {{ bicep_template_path }}
+        --parameters location={{ location }}
+                    rgName={{ rg_name }}
+                    storageName={{ storage_name }}
+                    afdProfileName={{ afd_profile_name }}
+                    afdEndpointName={{ afd_endpoint_name }}
+      register: deploy_out
+      changed_when: true
+
+    - name: Enable Static Website
+      ansible.builtin.command: >
+        az storage blob service-properties update
+        --account-name {{ storage_name }}
+        --static-website
+        --index-document index.html
+        --404-document 404.html
+      changed_when: true
+
+    - name: Upload site files to $web
+      ansible.builtin.command: >
+        az storage blob upload-batch
+        --account-name {{ storage_name }}
+        --destination '$web'
+        --source {{ site_path }}
+        --overwrite
+      changed_when: true
+
+    - name: Show Front Door URL
+      ansible.builtin.command: >
+        bash -lc "echo https://{{ afd_endpoint_name }}.azurefd.net"
+      changed_when: false

@@ -1,0 +1,189 @@
+:root {
+  --azure-blue: #0078d4;
+  --azure-dark: #005a9e;
+  --bg-light: #f3f2f1;
+  --text-main: #323130;
+  --text-muted: #605e5c;
+  --card-bg: #ffffff;
+  --border: #e1dfdd;
+}
+
+/* ---------- Reset / Base ---------- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text-main);
+  background: var(--bg-light);
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* ---------- Topbar / Nav ---------- */
+.topbar {
+  background: white;
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-weight: 600;
+  color: var(--azure-blue);
+}
+
+/* Nav layout */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.nav-links a {
+  margin-left: 16px;
+  text-decoration: none;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--azure-blue);
+}
+
+/* Icon nav */
+.nav-icons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-icons a {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.nav-icons a:hover {
+  color: var(--azure-blue);
+}
+
+.nav-icons svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.nav-icons a:hover svg {
+  transform: translateY(-2px);
+}
+
+/* ---------- Hero / Profile ---------- */
+.hero {
+  padding-top: 48px;
+}
+
+.profile {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 32px;
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 32px;
+  border: 1px solid var(--border);
+  align-items: center;
+}
+
+/* Profile photo */
+.photo {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--border);
+}
+
+/* Intro text */
+.intro h1 {
+  margin: 0 0 8px 0;
+}
+
+.intro h2 {
+  margin: 0 0 8px 0;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.company {
+  color: var(--azure-blue);
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.summary {
+  line-height: 1.6;
+}
+
+/* ---------- Counter ---------- */
+.counter {
+  margin-top: 24px;
+  padding: 12px 16px;
+  background: var(--bg-light);
+  border-radius: 6px;
+  display: inline-block;
+  font-weight: 500;
+}
+
+/* ---------- Blog ---------- */
+.blog article {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.blog .meta {
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+/* ---------- Footer ---------- */
+footer {
+  margin-top: 64px;
+  padding: 24px 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .profile {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .photo {
+    margin: 0 auto;
+  }
+
+  .nav {
+    gap: 16px;
+  }
+
+  .nav-links a {
+    margin-left: 8px;
+  }
+}

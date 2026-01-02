@@ -1,0 +1,17 @@
+rg_name: crc-azure-rg
+location: eastus
+
+# Must be globally unique, lowercase, 3-24 chars, letters+numbers only
+storage_name: crczara9630294805
+
+afd_profile_name: crc-afd-profile
+afd_endpoint_name: crc-afd-endpoint
+
+# Local site folder (you already verified index.html exists)
+site_path: /workspaces/cloud-resume-challenge/Azure/site
+
+# Bicep template
+bicep_template_path: /workspaces/cloud-resume-challenge/Azure/bicep/frontend.bicep
+
+# Give the deployment a name so we can query it
+deployment_name: crc-frontend

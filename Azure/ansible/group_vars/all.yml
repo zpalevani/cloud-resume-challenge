@@ -1,0 +1,6 @@
+location: eastus
+rg_name: crc-azure-rg
+storage_name: crcazurezara{{ 9999 | random }}   # must be globally unique, Ansible will generate
+afd_profile_name: crc-azure-afd
+afd_endpoint_name: crc-azure-endpoint
+site_path: /workspaces/cloud-resume-challenge/Azure/site
