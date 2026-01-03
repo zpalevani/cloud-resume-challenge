@@ -4,4 +4,4 @@
 - [AWS README](AWS/README.md)
 - [GCP README](GCP/README.md)
 - [Azure README](Azure/README.md)
-- [Text](folder/README.md)
+  
