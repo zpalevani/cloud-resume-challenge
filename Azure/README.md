@@ -843,10 +843,10 @@ This backend is:
 
 More importantly, I now understand **how and why it works**, and I can confidently discuss the architecture, trade-offs, and failure modes.
 
-That was the real win.
+That was the real win for me!
 
+![Cloud Resume Challenge on Azure with visitor counter](Azure/zara-azure-counter.png)
 
-<img src="zara azure counter.png" alt="cloudwithzara via Azure with visitor counter" width="900">
 
  For the website, given this is a Microsoft Azure project I used **Fluent Design System (Microsoft)** 
  Used for Windows and Microsoft 365. It focuses on "Light, Depth, Motion, Material, and Scale," moving away from the old flat "Metro" style.
