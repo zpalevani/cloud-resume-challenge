@@ -31,3 +31,10 @@
 
 # Ansible
 *.retry
+# Azure Functions build artifacts
+backend/function/function.zip
+backend/function/.python_packages/
+backend/function/__pycache__/
+backend/function/**/*.pyc
+backend/function/local.settings.json
+backend/function/.env

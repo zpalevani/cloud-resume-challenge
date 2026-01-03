@@ -601,3 +601,252 @@ echo | openssl s_client -servername www.cloudwithzarapalevani.space -connect www
 **Status:** ✅ Frontend is live, secure, and fully automated. Moving to Phase 2 (Backend).
 
 <img src="zara azure.png" alt="cloudwithzara via Azure" width="900">
+
+# Backend Work
+
+# Azure Backend – Visitor Counter (Technical Journal)
+
+## Overview
+
+This backend completes the **Azure Cloud Resume Challenge** by providing a serverless, low-cost, production-style visitor counter. The goal was not just to "make it work", but to understand the **real Azure trade-offs**, constraints, and operational considerations that show up outside of tutorials.
+
+The final solution uses:
+
+* Azure Functions (Python, Consumption Plan)
+* Azure Storage Account (Table API)
+* Bicep for Infrastructure as Code (IaC)
+* Azure CLI + Functions Core Tools for deployment
+
+This document captures **what I built, why I built it this way, and the exact commands used**, in my own words.
+
+---
+
+## High-Level Architecture
+
+**Flow**:
+
+1. Frontend JavaScript calls a public HTTP endpoint
+2. Azure Function receives the request
+3. Function reads / increments a counter in Azure Table Storage
+4. Function returns the updated count as JSON
+
+**Key design choice**: keep the backend **stateless**, with state stored in Table Storage.
+
+---
+
+## Backend Technology Choices
+
+### Azure Functions (Python)
+
+* **Plan**: Consumption (Y1)
+* **OS**: Linux
+* **Runtime**: Python (Functions v4)
+
+Why:
+
+* Zero idle cost
+* Scales automatically
+* Native fit for small, event-driven logic
+* Industry-standard for lightweight APIs
+
+### Azure Storage – Table API
+
+* Used as a simple key/value store
+* Single entity pattern:
+
+  * PartitionKey: `visitors`
+  * RowKey: `resume`
+
+Why:
+
+* Extremely cheap
+* No schema overhead
+* Perfect for a single counter
+* No need for Cosmos DB complexity
+
+### Bicep (Infrastructure as Code)
+
+Bicep was used to declaratively create:
+
+* Storage Account
+* Table Service + Table
+* Consumption App Service Plan
+* Linux Function App with managed identity
+
+Why:
+
+* Repeatable
+* Auditable
+* Matches real enterprise deployment patterns
+
+---
+
+## Folder Structure (Backend Only)
+
+```
+Azure/
+└── backend/
+    ├── bicep/
+    │   └── main.bicep
+    ├── function/
+    │   ├── counter/
+    │   │   ├── __init__.py
+    │   │   └── function.json
+    │   ├── requirements.txt
+    │   └── host.json
+    └── README.md
+```
+
+Clear separation between **infrastructure** and **application code**.
+
+---
+
+## Infrastructure Deployment (Bicep)
+
+### Deployment Strategy
+
+* Resource Group already existed
+* Backend deployed independently from frontend
+* Region changed to avoid subscription quota limitations
+
+Final backend region:
+
+```
+canadacentral
+```
+
+### Command Used
+
+```bash
+az deployment group create \
+  --resource-group crc-azure-rg \
+  --template-file main.bicep \
+  --parameters \
+    location=canadacentral \
+    storageAccountName=crczaravisitor<unique> \
+    functionAppName=crc-visitor-fn \
+    planName=crc-visitor-plan
+```
+
+### Important Azure Reality
+
+* Linux Consumption Functions are **not deterministic** when deployed via ARM/Bicep
+* Setting `linuxFxVersion` caused repeated deployment failures
+* Final solution intentionally **lets Azure infer runtime**, which is a real-world workaround used by experienced teams
+
+---
+
+## Function Application Code
+
+### Dependencies
+
+`requirements.txt`
+
+```txt
+azure-data-tables
+azure-identity
+```
+
+### Function Behavior
+
+* HTTP-triggered
+* Anonymous access
+* Handles CORS
+* Idempotent table creation
+* Atomic counter increment using upsert
+
+Key design decisions:
+
+* Single-row counter pattern
+* Merge updates to avoid overwrites
+* Explicit error handling
+
+---
+
+## Application Settings
+
+Set via Azure CLI (not hardcoded):
+
+```bash
+az functionapp config appsettings set \
+  --name crc-visitor-fn \
+  --resource-group crc-azure-rg \
+  --settings \
+    AZURE_STORAGE_CONNECTION_STRING="<connection-string>" \
+    TABLE_NAME="VisitorCounter"
+```
+
+Why:
+
+* No secrets in Git
+* Environment-specific configuration
+* Matches enterprise best practices
+
+---
+
+## Function Deployment
+
+Deployed using Azure Functions Core Tools:
+
+```bash
+func azure functionapp publish crc-visitor-fn
+```
+
+Why:
+
+* Avoids ARM runtime bugs
+* Deterministic
+* Fast iteration
+
+---
+
+## Security Considerations
+
+### What Was Done
+
+* No secrets committed to Git
+* Storage access controlled via connection string
+* HTTPS-only Function App
+* Minimal surface area (single endpoint)
+
+### Intentional Trade-offs
+
+* Function is publicly accessible (by design)
+* No auth layer added to keep challenge scope focused
+
+### What I Would Do in Production
+
+* Use Managed Identity instead of connection strings
+* Restrict Function access via Front Door or API Management
+* Enable Application Insights
+* Add rate limiting
+
+---
+
+## Lessons Learned
+
+* Azure behaves differently across subscriptions and regions
+* IaC is powerful, but knowing **when not to over-specify** matters
+* Debugging quota and platform constraints is real cloud work
+* Confidence comes from seeing the full stack, not memorizing syntax
+
+---
+
+## Final Outcome
+
+This backend is:
+
+* Live
+* Serverless
+* Low-cost
+* Explainable end-to-end
+
+More importantly, I now understand **how and why it works**, and I can confidently discuss the architecture, trade-offs, and failure modes.
+
+That was the real win.
+
+
+<img src="zara azure counter.png" alt="cloudwithzara via Azure with visitor counter" width="900">
+
+ For the website, given this is a Microsoft Azure project I used **Fluent Design System (Microsoft)** 
+ Used for Windows and Microsoft 365. It focuses on "Light, Depth, Motion, Material, and Scale," moving away from the old flat "Metro" style.
