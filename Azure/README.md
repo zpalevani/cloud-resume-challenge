@@ -845,7 +845,7 @@ More importantly, I now understand **how and why it works**, and I can confident
 
 That was the real win for me!
 
-![Cloud Resume Challenge on Azure with visitor counter](Azure/zara-azure-counter.png)
+![Cloud Resume Challenge on Azure with visitor counter](./zara-azure-counter.png)
 
 
  For the website, given this is a Microsoft Azure project I used **Fluent Design System (Microsoft)** 
