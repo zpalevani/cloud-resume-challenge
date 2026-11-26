@@ -1,18 +1,23 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Cloud Resume Challenge - S3 Website + CloudFront + Redirect (www -> apex) (DNS + ACM managed outside CFN)
+Description: Cloud Resume Challenge - S3 Website + CloudFront + Redirect (legacy hosts -> primary) (DNS + ACM managed outside CFN)
 
 Parameters:
   BucketName:
     Type: String
-    Description: Name of the S3 bucket for the Cloud Resume frontend (also your apex domain)
+    Description: Name of the S3 bucket for the Cloud Resume frontend (independent of the public domain)
 
   DomainName:
     Type: String
-    Description: Apex domain (e.g., cloudwithzarapalevani.online)
+    Description: Primary domain (e.g., aws.zarapalevani.com)
+
+  LegacyDomainName:
+    Type: String
+    Default: cloudwithzarapalevani.online
+    Description: Legacy domain retained for redirects
 
   AcmCertificateArn:
     Type: String
-    Description: "ACM certificate ARN in us-east-1 that covers DomainName and www.DomainName"
+    Description: "ACM certificate ARN in us-east-1 that covers DomainName, LegacyDomainName and www.LegacyDomainName"
 
 Resources:
   ResumeBucket:
@@ -52,14 +57,14 @@ Resources:
       Name: !Sub "${AWS::StackName}-www-to-apex"
       AutoPublish: true
       FunctionConfig:
-        Comment: Redirect www to apex
+        Comment: Redirect legacy hosts to primary
         Runtime: cloudfront-js-1.0
       FunctionCode: !Sub |
         function handler(event) {
           var req = event.request;
           var host = req.headers.host.value;
 
-          if (host === "www.${DomainName}") {
+          if (host === "${LegacyDomainName}" || host === "www.${LegacyDomainName}") {
             return {
               statusCode: 301,
               statusDescription: "Moved Permanently",
@@ -85,7 +90,8 @@ Resources:
 
         Aliases:
           - !Ref DomainName
-          - !Sub "www.${DomainName}"
+          - !Ref LegacyDomainName
+          - !Sub "www.${LegacyDomainName}"
 
         ViewerCertificate:
           AcmCertificateArn: !Ref AcmCertificateArn
