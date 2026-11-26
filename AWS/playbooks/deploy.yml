@@ -15,8 +15,10 @@
     repo_root: "{{ playbook_dir }}/../.."
     deploy_source_dir: "{{ repo_root }}/frontend/dist/{{ frontend_flavor }}"
 
-    # Domain == bucket name in your setup
-    domain_name: "{{ bucket_name }}"
+    # Public hostname is independent of the retained bucket name.
+    domain_name: aws.zarapalevani.com
+    legacy_domain_name: cloudwithzarapalevani.online
+    manage_route53_dns: false
 
     # CloudFront HostedZoneId for AliasTarget is constant
     cloudfront_alias_zone_id: "Z2FDTNDATAQYW2"
@@ -39,6 +41,8 @@
           - cfn_stack | length > 0
           - frontend_flavor is defined
           - frontend_flavor | length > 0
+          - migration_certificate_arn is defined
+          - migration_certificate_arn | length > 0
           - acm_certificate_arn is defined
           - acm_certificate_arn | length > 0
           - aws_access_key_id is defined
@@ -69,14 +73,17 @@
         --output text
       register: hz
       changed_when: false
+      when: manage_route53_dns | bool
 
     - name: Clean Hosted Zone ID (remove /hostedzone/ prefix)
       ansible.builtin.set_fact:
         hosted_zone_id: "{{ hz.stdout | regex_replace('^/hostedzone/', '') }}"
+      when: manage_route53_dns | bool
 
     - name: Debug hosted zone id
       ansible.builtin.debug:
         var: hosted_zone_id
+      when: manage_route53_dns | bool
 
     - name: Show Route53 apex and www records (current)
       ansible.builtin.command: >
@@ -86,10 +93,12 @@
         --output table
       register: zone_records_current
       changed_when: false
+      when: manage_route53_dns | bool
 
     - name: Route53 apex and www records (current)
       ansible.builtin.debug:
         var: zone_records_current.stdout
+      when: manage_route53_dns | bool
 
     - name: Read CloudFront domain from stack outputs (preferred)
       ansible.builtin.command: >
@@ -195,7 +204,7 @@
           --change-batch file:///tmp/r53-restore.json
       args:
         executable: /bin/bash
-      when: restore_dns_now | bool
+      when: manage_route53_dns | bool and restore_dns_now | bool
 
     - name: Show Route53 apex and www records (after restore)
       ansible.builtin.command: >
@@ -205,10 +214,12 @@
         --output table
       register: zone_records_after_restore
       changed_when: false
+      when: manage_route53_dns | bool
 
     - name: Route53 apex and www records (after restore)
       ansible.builtin.debug:
         var: zone_records_after_restore.stdout
+      when: manage_route53_dns | bool
 
     - name: Optional cleanup Route53 apex and www A and AAAA records (RARE recovery only)
       ansible.builtin.shell: |
@@ -254,7 +265,7 @@
           --change-batch file:///tmp/delete-dupes.json
       args:
         executable: /bin/bash
-      when: force_dns_cleanup | bool
+      when: manage_route53_dns | bool and force_dns_cleanup | bool
 
     - name: Deploy or update CloudFormation stack (DNS and ACM managed outside CFN)
       amazon.aws.cloudformation:
@@ -265,7 +276,8 @@
         template_parameters:
           BucketName: "{{ bucket_name }}"
           DomainName: "{{ domain_name }}"
-          AcmCertificateArn: "{{ acm_certificate_arn }}"
+          LegacyDomainName: "{{ legacy_domain_name }}"
+          AcmCertificateArn: "{{ migration_certificate_arn }}"
       register: cfn
 
     - name: Wait for CloudFormation update to complete (when a change occurred)

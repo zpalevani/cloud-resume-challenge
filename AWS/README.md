@@ -1,3 +1,7 @@
+# AWS domain migration (planned; not deployed)
+
+Target: `aws.zarapalevani.com`. See [migration runbook](MIGRATION.md). The original domain and deployment history below are retained for reference.
+
 # Dec 11, 2025 (Frontend)
 
 Purchased URL from namecheapa for my AWS project: cloudwithzarapalevani.online. I am aware that I could registere a domain via Route 53 but chose to do so via NameCheap. 

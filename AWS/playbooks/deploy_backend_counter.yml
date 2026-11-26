@@ -20,7 +20,7 @@
     backend_stack: "{{ cfn_stack }}-backend-counter"
 
     # Use your live site as CORS allow-origin (https apex)
-    allowed_origin: "https://{{ bucket_name }}"
+    allowed_origin: "https://aws.zarapalevani.com"
 
     # Throttling (low cost protection)
     throttle_burst: 10

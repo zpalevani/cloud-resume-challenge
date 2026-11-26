@@ -1,18 +1,26 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Cloud Resume Challenge - S3 Website + CloudFront + Redirect (www -> apex) (DNS + ACM managed outside CFN)
+Description: Cloud Resume Challenge - S3 Website + CloudFront + Legacy domain redirects (DNS + ACM managed outside CFN)
 
 Parameters:
   BucketName:
     Type: String
-    Description: Name of the S3 bucket for the Cloud Resume frontend (also your apex domain)
+    Description: Existing S3 bucket name; do not change during domain migration
 
   DomainName:
     Type: String
-    Description: Apex domain (e.g., cloudwithzarapalevani.online)
+    Description: Primary public hostname
+
+  LegacyDomainName:
+    Type: String
+    Default: ''
+    Description: Optional old hostname; its www alias is also retained during migration
 
   AcmCertificateArn:
     Type: String
-    Description: "ACM certificate ARN in us-east-1 that covers DomainName and www.DomainName"
+    Description: "ACM certificate ARN in us-east-1 that covers all configured aliases"
+
+Conditions:
+  HasLegacyDomain: !Not [!Equals [!Ref LegacyDomainName, '']]
 
 Resources:
   ResumeBucket:
@@ -59,7 +67,8 @@ Resources:
           var req = event.request;
           var host = req.headers.host.value;
 
-          if (host === "www.${DomainName}") {
+          var legacy = "${LegacyDomainName}";
+          if (legacy && (host === legacy || host === "www." + legacy)) {
             return {
               statusCode: 301,
               statusDescription: "Moved Permanently",
@@ -85,7 +94,8 @@ Resources:
 
         Aliases:
           - !Ref DomainName
-          - !Sub "www.${DomainName}"
+          - !If [HasLegacyDomain, !Ref LegacyDomainName, !Ref "AWS::NoValue"]
+          - !If [HasLegacyDomain, !Sub "www.${LegacyDomainName}", !Ref "AWS::NoValue"]
 
         ViewerCertificate:
           AcmCertificateArn: !Ref AcmCertificateArn
