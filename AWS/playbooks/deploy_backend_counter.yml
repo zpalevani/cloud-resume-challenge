@@ -19,8 +19,8 @@
     # Stack name for backend (keep separate from frontend stack)
     backend_stack: "{{ cfn_stack }}-backend-counter"
 
-    # Use your live site as CORS allow-origin (https apex)
-    allowed_origin: "https://{{ bucket_name }}"
+    # Use the primary public hostname, not the S3 bucket name.
+    allowed_origin: "https://aws.zarapalevani.com"
 
     # Throttling (low cost protection)
     throttle_burst: 10

@@ -15,8 +15,9 @@
     repo_root: "{{ playbook_dir }}/../.."
     deploy_source_dir: "{{ repo_root }}/frontend/dist/{{ frontend_flavor }}"
 
-    # Domain == bucket name in your setup
-    domain_name: "{{ bucket_name }}"
+    # Public hostname is independent of the existing S3 bucket.
+    domain_name: "aws.zarapalevani.com"
+    legacy_domain_name: "cloudwithzarapalevani.online"
 
     # CloudFront HostedZoneId for AliasTarget is constant
     cloudfront_alias_zone_id: "Z2FDTNDATAQYW2"
@@ -41,6 +42,7 @@
           - frontend_flavor | length > 0
           - acm_certificate_arn is defined
           - acm_certificate_arn | length > 0
+          - "'af470098-bcc2-4648-a8b3-e7b5cabfab16' in acm_certificate_arn"
           - aws_access_key_id is defined
           - aws_access_key_id | length > 0
           - aws_secret_access_key is defined
@@ -48,7 +50,7 @@
         fail_msg: >
           Missing required vars in AWS/vaults/prod.yml.
           Need: bucket_name, aws_region, cfn_stack, frontend_flavor, acm_certificate_arn,
-          aws_access_key_id, aws_secret_access_key
+          aws_access_key_id, aws_secret_access_key. Update the encrypted ACM ARN to the migration certificate before deploying.
       changed_when: false
 
     - name: Sanity check AWS credentials (who am I)
@@ -63,7 +65,7 @@
     - name: Lookup Route53 Hosted Zone ID for domain
       ansible.builtin.command: >
         aws route53 list-hosted-zones-by-name
-        --dns-name "{{ domain_name }}"
+        --dns-name "{{ legacy_domain_name }}"
         --max-items 1
         --query "HostedZones[0].Id"
         --output text
@@ -82,7 +84,7 @@
       ansible.builtin.command: >
         aws route53 list-resource-record-sets
         --hosted-zone-id "{{ hosted_zone_id }}"
-        --query "ResourceRecordSets[?Name=='{{ domain_name }}.' || Name=='www.{{ domain_name }}.'].[Name,Type,AliasTarget.DNSName]"
+        --query "ResourceRecordSets[?Name=='{{ legacy_domain_name }}.' || Name=='www.{{ legacy_domain_name }}.'].[Name,Type,AliasTarget.DNSName]"
         --output table
       register: zone_records_current
       changed_when: false
@@ -131,8 +133,8 @@
 
         HZID="{{ hosted_zone_id }}"
         CF_DNS="{{ active_cf_domain }}"
-        APEX="{{ domain_name }}."
-        WWW="www.{{ domain_name }}."
+        APEX="{{ legacy_domain_name }}."
+        WWW="www.{{ legacy_domain_name }}."
 
         cat > /tmp/r53-restore.json <<JSON
         {
@@ -201,7 +203,7 @@
       ansible.builtin.command: >
         aws route53 list-resource-record-sets
         --hosted-zone-id "{{ hosted_zone_id }}"
-        --query "ResourceRecordSets[?Name=='{{ domain_name }}.' || Name=='www.{{ domain_name }}.'].[Name,Type,AliasTarget.DNSName]"
+        --query "ResourceRecordSets[?Name=='{{ legacy_domain_name }}.' || Name=='www.{{ legacy_domain_name }}.'].[Name,Type,AliasTarget.DNSName]"
         --output table
       register: zone_records_after_restore
       changed_when: false
@@ -215,8 +217,8 @@
         set -euo pipefail
 
         HZID="{{ hosted_zone_id }}"
-        APEX="{{ domain_name }}."
-        WWW="www.{{ domain_name }}."
+        APEX="{{ legacy_domain_name }}."
+        WWW="www.{{ legacy_domain_name }}."
 
         aws route53 list-resource-record-sets \
           --hosted-zone-id "$HZID" \
@@ -265,6 +267,7 @@
         template_parameters:
           BucketName: "{{ bucket_name }}"
           DomainName: "{{ domain_name }}"
+          LegacyDomainName: "{{ legacy_domain_name }}"
           AcmCertificateArn: "{{ acm_certificate_arn }}"
       register: cfn
 

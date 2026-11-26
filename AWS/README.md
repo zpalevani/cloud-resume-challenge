@@ -1,5 +1,19 @@
 # Dec 11, 2025 (Frontend)
 
+## November 2026 domain migration
+
+The current public site is [aws.zarapalevani.com](https://aws.zarapalevani.com). The original `cloudwithzarapalevani.online` and its `www` hostname are retained as CloudFront redirect aliases. Historical instructions and screenshots below document the original deployment.
+
+- Existing S3 bucket: `cloudwithzarapalevani.online` (do not rename or replace).
+- Existing CloudFront distribution and DynamoDB table `cloud-resume-counter` remain in place.
+- Frontend stack: `cloud-resume-aws`; backend stack: `cloud-resume-aws-backend-counter`.
+- Cloudflare DNS manages the new hostname (DNS-only CNAME to the existing CloudFront distribution); Route 53 continues to manage the legacy domain.
+- ACM certificate in us-east-1 covers all three hostnames. Before running the frontend playbook, update `acm_certificate_arn` in the encrypted Ansible vault to the issued certificate ending in `af470098-bcc2-4648-a8b3-e7b5cabfab16`. Do not expose vault contents.
+- Backend CORS origin: `https://aws.zarapalevani.com`. Preserve the existing counter table and API endpoint.
+- Before deployment, review the CloudFormation change set for unintended resource replacements. The frontend sync uses `--delete`; verify the built assets before running it.
+- Verify both legacy redirects and counter increments after deployment.
+
+
 Purchased URL from namecheapa for my AWS project: cloudwithzarapalevani.online. I am aware that I could registere a domain via Route 53 but chose to do so via NameCheap. 
 
 I delegated my domain cloudwithzarapalevani.online from NameCheap to AWS Route 53. This means Route 53 now controls all DNS for my domain instead of NameCheap. By updating the nameservers, I effectively told the internet: “If you need DNS answers for my domain, go to AWS.” This shift gives me full flexibility to route traffic to my cloud resources and manage all DNS records directly inside Route 53. A small but critical step in building a fully cloud-hosted resume stack.
